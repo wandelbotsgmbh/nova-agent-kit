@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: markdownlint
+        uses: DavidAnson/markdownlint-cli2-action@v25
+        with:
+          globs: "**/*.md"
+      - uses: actions/setup-go@v7
+        with:
+          go-version: stable
+      - name: actionlint
+        run: |
+          go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+          "$(go env GOPATH)/bin/actionlint" -color
+
+  validate:
+    name: Validate skill and plugin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Generated output is up to date
+        run: |
+          pnpm build
+          git status --porcelain -- plugin .agents .claude-plugin
+          git diff --exit-code -- plugin .agents .claude-plugin
+          test -z "$(git status --porcelain -- plugin .agents .claude-plugin)"
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code@latest
+      - name: claude plugin validate
+        run: |
+          claude plugin validate --strict plugin
+          claude plugin validate --strict .
+      - uses: astral-sh/setup-uv@v10
+      - name: Agent Skills spec
+        run: |
+          uvx --from skills-ref agentskills validate plugin/skills/nova
+          uvx --from skills-ref agentskills validate .agents/skills/nova
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install latest stable nova CLI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(gh api repos/wandelbotsgmbh/nova-cli/releases/latest --jq .tag_name)"
+          curl -fsSL -o nova.tar.gz \
+            "https://github.com/wandelbotsgmbh/nova-cli/releases/download/${version}/novacli_linux_amd64-${version}.tar.gz"
+          mkdir -p "$HOME/.local/bin"
+          tar -xzf nova.tar.gz -C "$HOME/.local/bin" nova
+          chmod +x "$HOME/.local/bin/nova"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/nova" --help > /dev/null
+          echo "installed nova ${version}"
+      - run: pnpm test
+      - name: Dependency audit
+        run: pnpm audit --audit-level high
