@@ -1,5 +1,6 @@
-// Generates the agent adapters from skill/. Output is deterministic; run `npm run build`
-// after every change under skill/ and commit the result.
+// Generates the agent adapters from skill/. Output is deterministic; run `pnpm build`
+// after every change under skill/ and commit the result. An optional argument writes the
+// output below another directory instead of the repository root (used by the tests).
 import {
   chmodSync,
   mkdirSync,
@@ -8,16 +9,17 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, join, posix, relative, sep } from "node:path";
+import { dirname, join, posix, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
+const outRoot = process.argv[2] ? resolve(process.argv[2]) : root;
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 
 const skillDir = join(root, "skill");
-const pluginDir = join(root, "plugin");
-const agentsSkillDir = join(root, ".agents", "skills", "nova");
-const marketplaceFile = join(root, ".claude-plugin", "marketplace.json");
+const pluginDir = join(outRoot, "plugin");
+const agentsSkillDir = join(outRoot, ".agents", "skills", "nova");
+const marketplaceFile = join(outRoot, ".claude-plugin", "marketplace.json");
 
 const repoUrl = "https://github.com/wandelbotsgmbh/nova-agent-kit";
 const pluginName = "nova";
@@ -135,5 +137,5 @@ writeJson(marketplaceFile, {
 });
 
 console.log(
-  `Generated plugin/, .agents/skills/nova/ and .claude-plugin/marketplace.json (version ${pkg.version}).`,
+  `Generated plugin/, .agents/skills/nova/ and .claude-plugin/marketplace.json (version ${pkg.version}) in ${outRoot}`,
 );
