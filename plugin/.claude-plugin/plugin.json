@@ -1,0 +1,17 @@
+{
+  "name": "nova",
+  "version": "0.1.0",
+  "description": "Work with Wandelbots NOVA through the nova CLI: create and install apps, use the catalog, manage Nucleus files and troubleshoot instances.",
+  "author": {
+    "name": "Wandelbots"
+  },
+  "homepage": "https://github.com/wandelbotsgmbh/nova-agent-kit",
+  "repository": "https://github.com/wandelbotsgmbh/nova-agent-kit",
+  "license": "Apache-2.0",
+  "keywords": [
+    "nova",
+    "wandelbots",
+    "robotics",
+    "cli"
+  ]
+}

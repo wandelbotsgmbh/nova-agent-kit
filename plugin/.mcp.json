@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "nova": {
+      "command": "nova",
+      "args": [
+        "mcp"
+      ]
+    }
+  }
+}

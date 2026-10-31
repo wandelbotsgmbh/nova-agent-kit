@@ -1,0 +1,15 @@
+{
+  "name": "nova-agent-kit",
+  "owner": {
+    "name": "Wandelbots"
+  },
+  "description": "Skills and plugins for building on Wandelbots NOVA with AI coding agents.",
+  "plugins": [
+    {
+      "name": "nova",
+      "source": "./plugin",
+      "description": "Work with Wandelbots NOVA through the nova CLI: create and install apps, use the catalog, manage Nucleus files and troubleshoot instances.",
+      "version": "0.1.0"
+    }
+  ]
+}
