@@ -1,0 +1,5 @@
+# Transitive dependencies of markdownlint-cli2 with published advisories; remove an entry
+# once markdownlint ships a release that requires the patched version itself.
+overrides:
+  re2js: ">=2.8.7"
+  katex: ">=0.18.2"

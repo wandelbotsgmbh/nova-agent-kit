@@ -1,0 +1,10 @@
+{
+  "config": {
+    "default": true,
+    // Reference docs contain long command lines and tables.
+    "MD013": false
+  },
+  "globs": ["**/*.md"],
+  // Generated copies of skill/ are linted through their source.
+  "ignores": ["node_modules/**", "plugin/**", ".agents/**", "evals/**"]
+}
