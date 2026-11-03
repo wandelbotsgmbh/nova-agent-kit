@@ -59,6 +59,7 @@ Every `nova` command and subcommand accepts `--help`; use it before guessing a f
 | List, copy, move or delete files on an Omniverse Nucleus server | [reference/nucleus.md](reference/nucleus.md) |
 | Connection errors, version mismatch, diagnostics, TLS problems, `nova mcp` | [reference/troubleshoot.md](reference/troubleshoot.md) |
 | Pods, logs and events of an on-premise IPC or `k8srun` cluster with `kubectl` | [reference/cluster.md](reference/cluster.md) |
+| Show the user a planned path, the collision scene or robot poses (3D view or plot) | [reference/visualize.md](reference/visualize.md) |
 
 Read the matching reference before running a command group for the first time; it holds the
 exact flags and the order of steps.
@@ -83,11 +84,17 @@ exact flags and the order of steps.
 - Working against a virtual controller or a virtual instance is fine, including running
   programs that move the virtual robot.
 - Never move a physical robot, and never write I/O on one (grippers, conveyors, digital
-  outputs count as motion), from the command line, from a script you run, or through an MCP
-  tool. Motion on real hardware goes through an app with a path preview and an explicit human
-  approval in the NOVA UI.
-- If NOVA refuses an action because it needs approval, report that to the user. Do not retry
-  with other flags, another controller or another endpoint.
+  outputs count as motion), from the command line or from a script you run. Motion on real
+  hardware runs only after a human has seen a preview of exactly that plan and approved it in
+  the NOVA UI, in an app or on an approval page the agent cannot operate.
+- You may plan such a motion and ask NOVA to run it, but you never approve it. The order is:
+  plan, show the user the plan (see [reference/visualize.md](reference/visualize.md)), say
+  what will move and how fast, request the motion, then wait for the human. If a tool or
+  command answers that approval is required, pass the approval reference on to the user and
+  stop. Do not retry with other flags, another controller, another endpoint or an argument
+  that claims the approval was given.
+- Planning is a computation and moves nothing. Executing a plan, running a program and
+  writing an output move the robot.
 - On an instance wired to a physical robot, `kubectl` access stays read-only: restarting,
   deleting or changing a controller or app pod counts as motion. See
   [reference/cluster.md](reference/cluster.md).
