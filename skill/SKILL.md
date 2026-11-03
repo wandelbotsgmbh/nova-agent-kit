@@ -89,7 +89,8 @@ exact flags and the order of steps.
   app, or in the NOVA UI.
 - You may plan such a motion and ask NOVA to run it, but you never approve it. The order is:
   plan, show the user the plan (see [reference/visualize.md](reference/visualize.md)), say
-  what will move and how fast, request the motion, then wait for the human's answer. If a
+  what will move and how fast, tell the user to stand at the cell with the emergency stop in
+  hand before they approve, request the motion, then wait for the human's answer. If a
   tool or command answers that approval is required and shows no dialog, pass the approval
   reference on to the user and stop. Do not retry with other flags, another controller,
   another endpoint or an argument that claims the approval was given.
