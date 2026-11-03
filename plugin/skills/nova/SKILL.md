@@ -85,14 +85,15 @@ exact flags and the order of steps.
   programs that move the virtual robot.
 - Never move a physical robot, and never write I/O on one (grippers, conveyors, digital
   outputs count as motion), from the command line or from a script you run. Motion on real
-  hardware runs only after a human has seen a preview of exactly that plan and approved it in
-  the NOVA UI, in an app or on an approval page the agent cannot operate.
+  hardware runs only after a human has seen a preview of exactly that plan and approved it:
+  in a dialog that NOVA asks through your client and that only the human can answer, in an
+  app, or in the NOVA UI.
 - You may plan such a motion and ask NOVA to run it, but you never approve it. The order is:
   plan, show the user the plan (see [reference/visualize.md](reference/visualize.md)), say
-  what will move and how fast, request the motion, then wait for the human. If a tool or
-  command answers that approval is required, pass the approval reference on to the user and
-  stop. Do not retry with other flags, another controller, another endpoint or an argument
-  that claims the approval was given.
+  what will move and how fast, request the motion, then wait for the human's answer. If a
+  tool or command answers that approval is required and shows no dialog, pass the approval
+  reference on to the user and stop. Do not retry with other flags, another controller,
+  another endpoint or an argument that claims the approval was given.
 - Planning is a computation and moves nothing. Executing a plan, running a program and
   writing an output move the robot.
 - On an instance wired to a physical robot, `kubectl` access stays read-only: restarting,

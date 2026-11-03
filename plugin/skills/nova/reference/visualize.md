@@ -100,5 +100,6 @@ the robot model, which the viewer already has.
 
 The preview is the basis for the human's approval, so it has to be the same plan that will
 run. Plan once, show that plan, and request the motion with the identifier of that plan.
-If anything changes, plan and show again. The approval itself happens outside this
-conversation, in the NOVA UI; see the motion rules in `SKILL.md`.
+If anything changes, plan and show again. The approval itself is the human's answer to a
+dialog NOVA asks through your client, or an approval in an app or the NOVA UI; never
+answer it yourself. See the motion rules in `SKILL.md`.
