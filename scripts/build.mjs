@@ -1,5 +1,6 @@
-// Generates the agent adapters from skill/. Output is deterministic; run `pnpm build`
-// after every change under skill/ and commit the result. An optional argument writes the
+// Generates the agent adapters from skill/ and the nova-bot plugin from nova-bot/. Output
+// is deterministic; run `pnpm build` after every change under skill/ or nova-bot/ and commit
+// the result. An optional argument writes the
 // output below another directory instead of the repository root (used by the tests).
 import {
   chmodSync,
@@ -20,11 +21,16 @@ const skillDir = join(root, "skill");
 const pluginDir = join(outRoot, "plugin");
 const agentsSkillDir = join(outRoot, ".agents", "skills", "nova");
 const marketplaceFile = join(outRoot, ".claude-plugin", "marketplace.json");
+const botSourceDir = join(root, "nova-bot");
+const botPluginDir = join(outRoot, "plugin-nova-bot");
 
 const repoUrl = "https://github.com/wandelbotsgmbh/nova-agent-kit";
 const pluginName = "nova";
 const description =
   "Work with Wandelbots NOVA through the nova CLI: create and install apps, use the catalog, manage Nucleus files and troubleshoot instances.";
+const botPluginName = "nova-bot";
+const botDescription =
+  "A small pixel-art NOVA robot above the prompt that reacts to what the agent is doing. Just for fun; /nova-bot hides it.";
 
 function listFiles(dir, base = dir) {
   const out = [];
@@ -49,6 +55,12 @@ function withGeneratedMarker(rel, content) {
     }
   }
   return marker + content;
+}
+
+// Hooks-module sources get a comment line; other files are copied byte for byte.
+function withGeneratedComment(rel, content) {
+  if (!/\.(ts|tsx)$/.test(rel)) return content;
+  return `// Generated from nova-bot/${rel} by scripts/build.mjs. Edit the source, then run \`pnpm build\`.\n${content}`;
 }
 
 function writeFile(path, content, mode) {
@@ -84,6 +96,7 @@ exit 0
 rmSync(pluginDir, { recursive: true, force: true });
 rmSync(agentsSkillDir, { recursive: true, force: true });
 rmSync(marketplaceFile, { force: true });
+rmSync(botPluginDir, { recursive: true, force: true });
 
 copySkill(join(pluginDir, "skills", "nova"));
 copySkill(agentsSkillDir);
@@ -122,6 +135,28 @@ writeJson(join(pluginDir, ".mcp.json"), {
   },
 });
 
+// nova-bot: a hooks module (Claude Code's plugin API for code that runs in the session),
+// its state contract and its icon.
+for (const rel of listFiles(botSourceDir)) {
+  const source = join(botSourceDir, rel);
+  if (/\.(ts|tsx)$/.test(rel)) writeFile(join(botPluginDir, rel), withGeneratedComment(rel, readFileSync(source, "utf8")));
+  else writeFile(join(botPluginDir, rel), readFileSync(source));
+}
+
+writeJson(join(botPluginDir, ".claude-plugin", "plugin.json"), {
+  name: botPluginName,
+  version: pkg.version,
+  description: botDescription,
+  author: { name: "Wandelbots" },
+  homepage: repoUrl,
+  repository: repoUrl,
+  license: pkg.license,
+  keywords: ["nova", "wandelbots", "robot", "mascot"],
+  types: "./types/index.d.ts",
+});
+
+writeJson(join(botPluginDir, "hooks", "hooks.json"), { modules: ["./register.tsx"] });
+
 writeJson(marketplaceFile, {
   name: "nova-agent-kit",
   owner: { name: "Wandelbots" },
@@ -133,9 +168,15 @@ writeJson(marketplaceFile, {
       description,
       version: pkg.version,
     },
+    {
+      name: botPluginName,
+      source: "./plugin-nova-bot",
+      description: botDescription,
+      version: pkg.version,
+    },
   ],
 });
 
 console.log(
-  `Generated plugin/, .agents/skills/nova/ and .claude-plugin/marketplace.json (version ${pkg.version}) in ${outRoot}`,
+  `Generated plugin/, plugin-nova-bot/, .agents/skills/nova/ and .claude-plugin/marketplace.json (version ${pkg.version}) in ${outRoot}`,
 );

@@ -5,13 +5,15 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 
-import { isDirectory, pluginDir, readJson, root, walk } from "./helpers.mjs";
+import { botPluginDir, botSourceDir, isDirectory, pluginDir, readJson, root, walk } from "./helpers.mjs";
 
 const pkg = readJson(join(root, "package.json"));
 const plugin = readJson(join(pluginDir, ".claude-plugin", "plugin.json"));
 const marketplace = readJson(join(root, ".claude-plugin", "marketplace.json"));
 const mcp = readJson(join(pluginDir, ".mcp.json"));
 const hooks = readJson(join(pluginDir, "hooks", "hooks.json"));
+const bot = readJson(join(botPluginDir, ".claude-plugin", "plugin.json"));
+const botHooks = readJson(join(botPluginDir, "hooks", "hooks.json"));
 
 const reservedPrefix = /^(claude|anthropic|anthropics|cc-plugin)[-_]/i;
 const reservedNames = /^(claude|anthropic|anthropics|claude-code|claude-mods)$/i;
@@ -40,14 +42,16 @@ test("plugin userConfig holds at most the host", () => {
   }
 });
 
-test("marketplace.json points at ./plugin with matching metadata", () => {
+test("marketplace.json lists ./plugin and ./plugin-nova-bot with matching metadata", () => {
   assertAllowedName(marketplace.name, "marketplace name");
   assert.ok(marketplace.owner?.name);
-  assert.equal(marketplace.plugins.length, 1);
-  const [entry] = marketplace.plugins;
-  assert.equal(entry.name, plugin.name);
-  assert.equal(entry.source, "./plugin");
-  assert.equal(entry.version, pkg.version);
+  assert.deepEqual(
+    marketplace.plugins.map((entry) => [entry.name, entry.source, entry.version]),
+    [
+      [plugin.name, "./plugin", pkg.version],
+      [bot.name, "./plugin-nova-bot", pkg.version],
+    ],
+  );
 });
 
 test(".mcp.json launches nova mcp without credentials", () => {
@@ -106,4 +110,29 @@ test("plugin contains exactly the generated skill plus manifests", () => {
     ...skillFiles,
   ].sort();
   assert.deepEqual(files, expected);
+});
+
+test("nova-bot plugin.json has the required fields and the kit version", () => {
+  assertAllowedName(bot.name, "nova-bot plugin name");
+  assert.equal(bot.version, pkg.version, "nova-bot version must come from package.json");
+  assert.ok(bot.description);
+  assert.ok(bot.author?.name);
+  assert.equal(bot.license, pkg.license);
+  assert.equal(bot.userConfig, undefined, "nova-bot takes no configuration");
+  assert.equal(bot.types, "./types/index.d.ts");
+});
+
+test("nova-bot hooks.json loads only its hooks module, no shell hooks, MCP servers or bin/", () => {
+  assert.deepEqual(botHooks, { modules: ["./register.tsx"] });
+  assert.ok(!existsSync(join(botPluginDir, ".mcp.json")));
+  assert.ok(!isDirectory(join(botPluginDir, "bin")), "plugin-nova-bot/bin is not allowed");
+});
+
+test("nova-bot plugin contains exactly its source plus manifests", () => {
+  const expected = [
+    ".claude-plugin/plugin.json",
+    "hooks/hooks.json",
+    ...walk(botSourceDir),
+  ].sort();
+  assert.deepEqual(walk(botPluginDir), expected);
 });

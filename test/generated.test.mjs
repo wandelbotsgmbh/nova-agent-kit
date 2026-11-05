@@ -7,11 +7,11 @@ import { test } from "node:test";
 
 import { readText, root, walk } from "./helpers.mjs";
 
-const generatedPaths = ["plugin", ".agents", ".claude-plugin"];
+const generatedPaths = ["plugin", "plugin-nova-bot", ".agents", ".claude-plugin"];
 
 // Builds into a scratch directory so the test never touches the working tree while other
 // test files read the committed output.
-test("committed adapters match a fresh build of skill/", () => {
+test("committed adapters match a fresh build of skill/ and nova-bot/", () => {
   const out = mkdtempSync(join(tmpdir(), "nova-kit-build-"));
   execFileSync("node", [join(root, "scripts", "build.mjs"), out], { cwd: root, stdio: "pipe" });
 
