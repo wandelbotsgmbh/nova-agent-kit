@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 export const root = dirname(dirname(fileURLToPath(import.meta.url)));
 export const skillDir = join(root, "skill");
 export const pluginDir = join(root, "plugin");
+export const botSourceDir = join(root, "nova-bot");
 
 export function readJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));

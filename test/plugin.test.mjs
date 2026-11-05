@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 
-import { isDirectory, pluginDir, readJson, root, walk } from "./helpers.mjs";
+import { botSourceDir, isDirectory, pluginDir, readJson, root, walk } from "./helpers.mjs";
 
 const pkg = readJson(join(root, "package.json"));
 const plugin = readJson(join(pluginDir, ".claude-plugin", "plugin.json"));
@@ -73,6 +73,13 @@ test("hooks.json registers an executable SessionStart check", () => {
   assert.ok(statSync(script).mode & 0o111, "check-nova.sh must be executable");
 });
 
+test("hooks.json loads the NOVA bot as its only hooks module, with its state contract", () => {
+  assert.deepEqual(hooks.modules, ["./register.tsx"]);
+  assert.ok(existsSync(join(pluginDir, "hooks", "register.tsx")));
+  assert.equal(plugin.types, "./types/index.d.ts");
+  assert.ok(existsSync(join(pluginDir, "types", "index.d.ts")));
+});
+
 test("SessionStart hook reports a missing nova CLI and stays quiet otherwise", () => {
   const script = join(pluginDir, "hooks", "check-nova.sh");
   const emptyPath = mkdtempSync(join(tmpdir(), "nova-kit-nopath-"));
@@ -95,7 +102,7 @@ test("plugin has no bin/ directory and no CLAUDE.md", () => {
   assert.ok(!existsSync(join(pluginDir, "CLAUDE.md")));
 });
 
-test("plugin contains exactly the generated skill plus manifests", () => {
+test("plugin contains exactly the generated skill, the NOVA bot and manifests", () => {
   const files = walk(pluginDir);
   const skillFiles = walk(join(root, "skill")).map((f) => `skills/nova/${f}`);
   const expected = [
@@ -104,6 +111,8 @@ test("plugin contains exactly the generated skill plus manifests", () => {
     "hooks/check-nova.sh",
     "hooks/hooks.json",
     ...skillFiles,
+    ...walk(botSourceDir),
   ].sort();
   assert.deepEqual(files, expected);
 });
+

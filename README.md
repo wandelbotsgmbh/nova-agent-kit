@@ -37,7 +37,14 @@ The plugin adds:
 
 - the `nova` skill (`/nova:nova`), loaded automatically when a task mentions NOVA;
 - a session-start hook that tells the agent when `nova` is missing from `PATH`;
-- the MCP server `nova`, started as `nova mcp`. It is experimental; the skill prefers the CLI.
+- the MCP server `nova`, started as `nova mcp` (experimental; the skill prefers the CLI);
+- the NOVA bot: a small pixel-art robot above the prompt that reacts to what the agent is
+  doing. It thinks, puts on a hard hat while `nova` commands run, cheers when a turn is done
+  and falls asleep when nothing happens. It is just for fun and changes nothing about how the
+  agent works. `/nova-bot` hides it and shows it again; the choice is remembered across
+  sessions. Terminals that can show images (for example Ghostty, kitty or WezTerm) draw it in
+  real pixels; other terminals use block characters. It is built on Claude Code's
+  hooks-module API, which is in early access and may change between Claude Code releases.
 
 ### Agents that read `.agents/skills/`
 
@@ -70,8 +77,9 @@ instance.
 
 ```text
 skill/                    the skill: SKILL.md + reference/*.md - the only hand-edited content
-scripts/build.mjs         generates the adapters below from skill/
-plugin/                   generated Claude Code plugin
+nova-bot/                 the NOVA bot: hooks module, state types and icon - hand-edited
+scripts/build.mjs         generates the adapters below from skill/ and nova-bot/
+plugin/                   generated Claude Code plugin, including the NOVA bot
 .claude-plugin/           generated marketplace manifest pointing at ./plugin
 .agents/skills/nova/      generated plain skill tree
 test/                     node:test suite

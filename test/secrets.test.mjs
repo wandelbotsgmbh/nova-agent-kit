@@ -18,7 +18,7 @@ const patterns = [
   { name: "cluster hostname", regex: /\b[a-z0-9.-]+\.(azurecr\.io|wabo\.run)\b/i },
 ];
 
-const textFile = /\.(md|json|jsonc|mjs|js|yaml|yml|sh|txt)$/;
+const textFile = /\.(md|json|jsonc|mjs|js|ts|tsx|yaml|yml|sh|txt)$/;
 
 test("no secrets or internal hostnames in the repository", () => {
   const findings = [];
