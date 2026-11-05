@@ -177,9 +177,10 @@ nova app install --copy-image --ssh-user <user>
 
 ```sh
 nova app list            # apps installed on the configured instance
-nova app edit <name>     # opens the app configuration in $EDITOR (nova config set editor <cmd>)
+nova app edit <name>     # interactive: opens the app configuration in the user's editor
 nova app delete <name>   # removes the app immediately - ask the user first
 ```
 
-`nova app delete` has no confirmation prompt; confirm the exact app name with the user before
-running it.
+`nova app edit` needs a person at the editor; ask the user to run it, or describe the change
+for them. `nova app delete` has no confirmation prompt; confirm the exact app name with the
+user before running it.
