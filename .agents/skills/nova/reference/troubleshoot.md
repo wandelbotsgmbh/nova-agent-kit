@@ -22,7 +22,8 @@ nova version -v    # adds details such as the configured host
   with `nova instance select <name>` or `nova config set host <url>`.
 - A hosted instance may be stopped: `nova instance list`, then `nova instance start <name>`.
 - Authentication errors: the user needs to log in again with `nova login` in their own
-  terminal. Do not run `nova login token`.
+  terminal; it opens a browser and cannot run from an agent session. Do not run
+  `nova login token` instead.
 
 ## 3. Version mismatch
 
