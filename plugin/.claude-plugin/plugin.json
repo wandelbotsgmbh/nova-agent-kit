@@ -13,5 +13,6 @@
     "wandelbots",
     "robotics",
     "cli"
-  ]
+  ],
+  "types": "./types/index.d.ts"
 }

@@ -37,24 +37,14 @@ The plugin adds:
 
 - the `nova` skill (`/nova:nova`), loaded automatically when a task mentions NOVA;
 - a session-start hook that tells the agent when `nova` is missing from `PATH`;
-- the MCP server `nova`, started as `nova mcp`. It is experimental; the skill prefers the CLI.
-
-#### Optional: the NOVA bot
-
-A second plugin in the same marketplace adds a small pixel-art robot above the prompt. It
-reacts to what the agent is doing: it thinks, puts on a hard hat while `nova` commands run,
-cheers when a turn is done and falls asleep when nothing happens. It is just for fun and
-changes nothing about how the agent works.
-
-```text
-/plugin install nova-bot --marketplace wandelbotsgmbh/nova-agent-kit
-```
-
-`/nova-bot` hides the robot and shows it again; the choice is remembered across sessions.
-`/plugin disable nova-bot` turns the plugin off. Terminals that can show images (for example
-Ghostty, kitty or WezTerm) draw the robot in real pixels; other terminals draw it with block
-characters. The plugin is built on Claude Code's hooks-module API, which is in early access
-and may change between Claude Code releases.
+- the MCP server `nova`, started as `nova mcp` (experimental; the skill prefers the CLI);
+- the NOVA bot: a small pixel-art robot above the prompt that reacts to what the agent is
+  doing. It thinks, puts on a hard hat while `nova` commands run, cheers when a turn is done
+  and falls asleep when nothing happens. It is just for fun and changes nothing about how the
+  agent works. `/nova-bot` hides it and shows it again; the choice is remembered across
+  sessions. Terminals that can show images (for example Ghostty, kitty or WezTerm) draw it in
+  real pixels; other terminals use block characters. It is built on Claude Code's
+  hooks-module API, which is in early access and may change between Claude Code releases.
 
 ### Agents that read `.agents/skills/`
 
@@ -89,9 +79,8 @@ instance.
 skill/                    the skill: SKILL.md + reference/*.md - the only hand-edited content
 nova-bot/                 the NOVA bot: hooks module, state types and icon - hand-edited
 scripts/build.mjs         generates the adapters below from skill/ and nova-bot/
-plugin/                   generated Claude Code plugin
-plugin-nova-bot/          generated Claude Code plugin for the NOVA bot
-.claude-plugin/           generated marketplace manifest pointing at both plugins
+plugin/                   generated Claude Code plugin, including the NOVA bot
+.claude-plugin/           generated marketplace manifest pointing at ./plugin
 .agents/skills/nova/      generated plain skill tree
 test/                     node:test suite
 evals/                    eval cases for `claude plugin eval` (not run in CI)

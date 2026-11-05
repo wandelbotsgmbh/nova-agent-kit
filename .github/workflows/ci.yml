@@ -44,15 +44,14 @@ jobs:
       - name: Generated output is up to date
         run: |
           pnpm build
-          git status --porcelain -- plugin plugin-nova-bot .agents .claude-plugin
-          git diff --exit-code -- plugin plugin-nova-bot .agents .claude-plugin
-          test -z "$(git status --porcelain -- plugin plugin-nova-bot .agents .claude-plugin)"
+          git status --porcelain -- plugin .agents .claude-plugin
+          git diff --exit-code -- plugin .agents .claude-plugin
+          test -z "$(git status --porcelain -- plugin .agents .claude-plugin)"
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code@latest
       - name: claude plugin validate
         run: |
           claude plugin validate --strict plugin
-          claude plugin validate --strict plugin-nova-bot
           claude plugin validate --strict .
       # setup-uv publishes no moving major tag; Dependabot bumps the exact version.
       - uses: astral-sh/setup-uv@v10.3.3

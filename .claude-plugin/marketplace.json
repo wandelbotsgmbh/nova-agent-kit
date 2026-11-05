@@ -10,12 +10,6 @@
       "source": "./plugin",
       "description": "Work with Wandelbots NOVA through the nova CLI: create and install apps, use the catalog, manage Nucleus files and troubleshoot instances.",
       "version": "0.1.0"
-    },
-    {
-      "name": "nova-bot",
-      "source": "./plugin-nova-bot",
-      "description": "A small pixel-art NOVA robot above the prompt that reacts to what the agent is doing. Just for fun; /nova-bot hides it.",
-      "version": "0.1.0"
     }
   ]
 }

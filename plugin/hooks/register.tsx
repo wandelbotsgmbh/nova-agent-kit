@@ -9,13 +9,13 @@ import { hdImage } from './sprite-hd'
 const FRAME_MS = 250
 const SLEEP_AFTER_MS = 90_000
 
-const mood = atom({ plugin: 'nova-bot', key: 'mood' } as const, 'idle' as Mood, {
+const mood = atom({ plugin: 'nova', key: 'mood' } as const, 'idle' as Mood, {
   shape: 'mood-1',
 })
-const tick = atom({ plugin: 'nova-bot', key: 'tick' } as const, 0)
-const isHidden = atom({ plugin: 'nova-bot', key: 'isHidden' } as const, false)
+const tick = atom({ plugin: 'nova', key: 'tick' } as const, 0)
+const isHidden = atom({ plugin: 'nova', key: 'isHidden' } as const, false)
 // Real pixels (an Image) where the terminal draws images; block characters elsewhere.
-const canDrawImages = atom({ plugin: 'nova-bot', key: 'canDrawImages' } as const, true)
+const canDrawImages = atom({ plugin: 'nova', key: 'canDrawImages' } as const, true)
 
 // The image's box: twice as many columns as rows makes it square on screen.
 const IMAGE_COLUMNS = 8
@@ -99,7 +99,7 @@ export const register: Register = on => {
     })
 
     // The person's /nova-bot choice outlives the session.
-    const stored = await $.store.get('isHidden')
+    const stored = await $.store.get('nova-bot.isHidden')
     await update($, isHidden, () => stored === true)
 
     lastActivity = await $.clock.now()
@@ -119,7 +119,7 @@ export const register: Register = on => {
   on('command.run', { command: 'nova-bot' }, async $ => {
     const hidden = !(await read($, isHidden))
     await update($, isHidden, () => hidden)
-    await $.store.set('isHidden', hidden)
+    await $.store.set('nova-bot.isHidden', hidden)
     if (hidden) return { text: 'The NOVA bot powers down, in this and later sessions. /nova-bot brings it back.' }
     await feel($, 'happy', 3000)
     return { text: 'beep boop, the NOVA bot says hi.' }

@@ -7,7 +7,7 @@ import { test } from "node:test";
 
 import { readText, root, walk } from "./helpers.mjs";
 
-const generatedPaths = ["plugin", "plugin-nova-bot", ".agents", ".claude-plugin"];
+const generatedPaths = ["plugin", ".agents", ".claude-plugin"];
 
 // Builds into a scratch directory so the test never touches the working tree while other
 // test files read the committed output.
