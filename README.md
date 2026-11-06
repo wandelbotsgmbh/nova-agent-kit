@@ -33,12 +33,35 @@ Pick a channel when you add the marketplace, then install the plugin:
 
 `#release` is the stable channel. Leave it out to follow `main`, which gets every merged
 change first (the `-rc` releases). Both channels use the marketplace name `nova-agent-kit`,
-so add only one of them. To switch channels, remove the marketplace and add it again.
+so add only one of them. To switch channels, remove the marketplace and add the other one:
+
+```text
+/plugin marketplace remove nova-agent-kit
+/plugin marketplace add wandelbotsgmbh/nova-agent-kit
+/plugin install nova@nova-agent-kit
+```
 
 Claude Code does not auto-update plugins from third-party marketplaces by default. Turn it on
-in `/plugin` > Marketplaces, or run `claude plugin update nova@nova-agent-kit` yourself. The repository is private for now, so your `gh`
-or git credentials need access to it; from a local checkout, use
-`/plugin marketplace add /path/to/nova-agent-kit` instead.
+in `/plugin` > Marketplaces, or run `claude plugin update nova@nova-agent-kit` yourself.
+
+The repository is private for now, so your `gh` or git credentials need access to it. From a
+local checkout, use `/plugin marketplace add /path/to/nova-agent-kit` instead; that follows
+whatever is checked out there, not a channel.
+
+To offer the plugin to everyone working in a project, declare the marketplace and its channel
+in the project's `.claude/settings.json`. Claude Code then asks each user to install it when
+they trust the project folder:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "nova-agent-kit": {
+      "source": { "source": "github", "repo": "wandelbotsgmbh/nova-agent-kit", "ref": "release" }
+    }
+  },
+  "enabledPlugins": { "nova@nova-agent-kit": true }
+}
+```
 
 The plugin adds:
 
