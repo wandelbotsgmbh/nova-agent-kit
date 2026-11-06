@@ -19,6 +19,7 @@
   Never add a `version` to `package.json` or the manifests: without one, Claude Code versions
   the plugin by commit SHA, which is what makes every commit on a channel an update. Since
   commit types decide the next version, pick `feat`/`fix` versus `docs`/`chore` deliberately.
+  How to cut and promote a release: `RELEASING.md`.
 
 ## Commands
 

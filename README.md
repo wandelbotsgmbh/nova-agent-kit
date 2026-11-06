@@ -116,27 +116,17 @@ test/                     node:test suite
 evals/                    eval cases for `claude plugin eval` (not run in CI)
 ```
 
-See [AGENTS.md](AGENTS.md) for how to change the skill and run the checks, and
-[HARNESSES.md](HARNESSES.md) for what each agent supports.
+See [CONTRIBUTING.md](CONTRIBUTING.md) to get started, [AGENTS.md](AGENTS.md) for how to
+change the skill and run the checks, and [HARNESSES.md](HARNESSES.md) for what each agent
+supports. Report vulnerabilities as described in [SECURITY.md](SECURITY.md).
 
 ## Versioning
 
-Releases work as in the nova-cli repository. The version number lives in git tags only:
-
-- Every merge to `main` with a `feat` or `fix` commit (Conventional Commits) gets an
-  `x.y.z-rc.N` prerelease on GitHub, with release notes.
-- The **Promote** workflow (Actions > Promote > Run workflow, with a verified rc tag or
-  commit) fast-forwards the `release` branch to that commit. The Release workflow then tags
-  the stable `x.y.z`. By hand: `git push origin <sha>:release`.
-
-The plugin and marketplace manifests carry no `version`, on purpose. Without one, Claude Code
-versions the plugin by commit SHA (`/plugin` shows 12 hex digits), so every commit on the
-branch a marketplace tracks counts as an update. A fixed version string would keep users on
-their cached copy until someone changed it. `pnpm validate:plugin` therefore runs
-`claude plugin validate` and fails on every warning except the missing version.
-
-Publishing tags and releases is gated by the repository variable `RELEASE_ENABLED`; until it
-is `true`, the Release workflow runs as a dry run.
+Releases work as in the nova-cli repository: every merge to `main` with a `feat` or `fix`
+commit gets an `x.y.z-rc.N` prerelease, and promoting a verified rc to the `release` branch
+cuts the stable `x.y.z`. The version lives in git tags only; the manifests carry no
+`version`, so Claude Code versions the plugin by commit SHA and every commit on a channel is
+an update. [RELEASING.md](RELEASING.md) explains the steps and the reasons.
 
 ## License
 
