@@ -1,0 +1,78 @@
+name: Release
+
+# Two channels, as in nova-cli:
+#   main     every merge with release-worthy commits → x.y.z-rc.N GitHub prerelease.
+#            Marketplaces added as `wandelbotsgmbh/nova-agent-kit` track this branch.
+#   release  stable x.y.z. The branch is only ever fast-forwarded to a verified
+#            commit on main, via the Promote workflow (promote.yml) or
+#            `git push origin <sha>:release`. Marketplaces added as
+#            `wandelbotsgmbh/nova-agent-kit#release` track this branch.
+#
+# The version lives in the git tag only: the manifests carry no `version`, so
+# Claude Code versions the plugin by commit SHA and every commit on a tracked
+# branch is an update. semantic-release decides the number from Conventional
+# Commits and creates the tag and the GitHub release with its notes.
+#
+# Publishing is gated by the repo variable RELEASE_ENABLED (Settings → Secrets and
+# variables → Actions → Variables). While it isn't "true", this is a dry run.
+
+on:
+  push:
+    branches: [main, release]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Dry run (no tag or release)
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  SEMANTIC_RELEASE_PACKAGES: >-
+    -p semantic-release@25.0.9
+    -p conventional-changelog-conventionalcommits@8.0.0
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - id: mode
+        name: Decide release mode
+        run: |
+          dry_run=true
+          if [ "${{ vars.RELEASE_ENABLED }}" = "true" ] \
+            && { [ "$GITHUB_REF" = "refs/heads/main" ] || [ "$GITHUB_REF" = "refs/heads/release" ]; } \
+            && { [ "${{ github.event_name }}" = "push" ] || [ "${{ inputs.dry_run }}" = "false" ]; }; then
+            dry_run=false
+          fi
+          echo "dry_run=$dry_run" >> "$GITHUB_OUTPUT"
+          echo "**Dry run:** $dry_run" >> "$GITHUB_STEP_SUMMARY"
+      - name: semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # shellcheck disable=SC2086 # SEMANTIC_RELEASE_PACKAGES is a list of args
+          if [ "${{ steps.mode.outputs.dry_run }}" = "true" ]; then
+            # other branches (manual dry run) aren't configured in .releaserc.json
+            branches=()
+            case "$GITHUB_REF_NAME" in main|release) ;; *) branches=(--branches "$GITHUB_REF_NAME") ;; esac
+            npx --yes $SEMANTIC_RELEASE_PACKAGES semantic-release --dry-run --no-ci "${branches[@]}"
+          else
+            npx --yes $SEMANTIC_RELEASE_PACKAGES semantic-release
+          fi

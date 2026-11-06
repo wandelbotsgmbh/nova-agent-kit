@@ -98,7 +98,9 @@ copySkill(agentsSkillDir);
 
 writeJson(join(pluginDir, ".claude-plugin", "plugin.json"), {
   name: pluginName,
-  version: pkg.version,
+  // No version: Claude Code then versions the plugin by commit SHA, so every
+  // commit on the branch a marketplace tracks (main or release) is an update.
+  // Release numbers live in git tags only, see .releaserc.json.
   description,
   author: { name: "Wandelbots" },
   homepage: repoUrl,
@@ -149,11 +151,10 @@ writeJson(marketplaceFile, {
       name: pluginName,
       source: "./plugin",
       description,
-      version: pkg.version,
     },
   ],
 });
 
 console.log(
-  `Generated plugin/ (with the NOVA bot), .agents/skills/nova/ and .claude-plugin/marketplace.json (version ${pkg.version}) in ${outRoot}`,
+  `Generated plugin/ (with the NOVA bot), .agents/skills/nova/ and .claude-plugin/marketplace.json in ${outRoot}`,
 );
