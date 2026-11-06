@@ -24,14 +24,44 @@ robots. Adapters for each agent are generated from that skill.
 
 ### Claude Code
 
+Pick a channel when you add the marketplace, then install the plugin:
+
 ```text
-/plugin install nova --marketplace wandelbotsgmbh/nova-agent-kit
+/plugin marketplace add wandelbotsgmbh/nova-agent-kit#release
+/plugin install nova@nova-agent-kit
 ```
 
-Older Claude Code versions use two steps: `/plugin marketplace add wandelbotsgmbh/nova-agent-kit`,
-then `/plugin install nova@nova-agent-kit`. The repository is private for now, so your `gh`
-or git credentials need access to it; from a local checkout, use
-`/plugin marketplace add /path/to/nova-agent-kit` instead.
+`#release` is the stable channel. Leave it out to follow `main`, which gets every merged
+change first (the `-rc` releases). Both channels use the marketplace name `nova-agent-kit`,
+so add only one of them. To switch channels, remove the marketplace and add the other one:
+
+```text
+/plugin marketplace remove nova-agent-kit
+/plugin marketplace add wandelbotsgmbh/nova-agent-kit
+/plugin install nova@nova-agent-kit
+```
+
+Claude Code does not auto-update plugins from third-party marketplaces by default. Turn it on
+in `/plugin` > Marketplaces, or run `claude plugin update nova@nova-agent-kit` yourself.
+
+The repository is private for now, so your `gh` or git credentials need access to it. From a
+local checkout, use `/plugin marketplace add /path/to/nova-agent-kit` instead; that follows
+whatever is checked out there, not a channel.
+
+To offer the plugin to everyone working in a project, declare the marketplace and its channel
+in the project's `.claude/settings.json`. Claude Code then asks each user to install it when
+they trust the project folder:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "nova-agent-kit": {
+      "source": { "source": "github", "repo": "wandelbotsgmbh/nova-agent-kit", "ref": "release" }
+    }
+  },
+  "enabledPlugins": { "nova@nova-agent-kit": true }
+}
+```
 
 The plugin adds:
 
@@ -91,8 +121,22 @@ See [AGENTS.md](AGENTS.md) for how to change the skill and run the checks, and
 
 ## Versioning
 
-The version in `package.json` is the kit version; the build writes it into the plugin and
-marketplace manifests. Release tagging is a follow-up.
+Releases work as in the nova-cli repository. The version number lives in git tags only:
+
+- Every merge to `main` with a `feat` or `fix` commit (Conventional Commits) gets an
+  `x.y.z-rc.N` prerelease on GitHub, with release notes.
+- The **Promote** workflow (Actions > Promote > Run workflow, with a verified rc tag or
+  commit) fast-forwards the `release` branch to that commit. The Release workflow then tags
+  the stable `x.y.z`. By hand: `git push origin <sha>:release`.
+
+The plugin and marketplace manifests carry no `version`, on purpose. Without one, Claude Code
+versions the plugin by commit SHA (`/plugin` shows 12 hex digits), so every commit on the
+branch a marketplace tracks counts as an update. A fixed version string would keep users on
+their cached copy until someone changed it. `pnpm validate:plugin` therefore runs
+`claude plugin validate` and fails on every warning except the missing version.
+
+Publishing tags and releases is gated by the repository variable `RELEASE_ENABLED`; until it
+is `true`, the Release workflow runs as a dry run.
 
 ## License
 

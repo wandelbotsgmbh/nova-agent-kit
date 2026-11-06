@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, release]
   pull_request:
 
 permissions:
@@ -49,10 +49,9 @@ jobs:
           test -z "$(git status --porcelain -- plugin .agents .claude-plugin)"
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code@latest
+      # --strict, except for the missing `version` (see scripts/validate-plugin.mjs)
       - name: claude plugin validate
-        run: |
-          claude plugin validate --strict plugin
-          claude plugin validate --strict .
+        run: node scripts/validate-plugin.mjs plugin .
       # setup-uv publishes no moving major tag; Dependabot bumps the exact version.
       - uses: astral-sh/setup-uv@v10.3.3
       - name: Agent Skills spec
