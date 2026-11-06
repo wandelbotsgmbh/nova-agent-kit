@@ -115,11 +115,15 @@ Notes:
 ### Hot reload on the instance (Skaffold)
 
 Use this when a program must be registered on the instance while you iterate, instead of
-only running locally. Requirements: `kubectl` access to the instance cluster (`KUBECONFIG`),
-[Skaffold](https://skaffold.dev/docs/install/), and a login to the image registry named in
-`skaffold.env` (`SKAFFOLD_DEFAULT_REPO`; override with `--default-repo`).
+only running locally. Requirements: `kubectl` access to the instance cluster, which cloud
+instances do not give (use an on-premise IPC or a `k8srun` cluster, see
+[instances.md](instances.md)), [Skaffold](https://skaffold.dev/docs/install/), and a login to
+the image registry named in `skaffold.env` (`SKAFFOLD_DEFAULT_REPO`; override with
+`--default-repo`).
 
 ```sh
+eval "$(nova instance env <name>)"   # KUBECONFIG and NOVA_INSTANCE for this shell
+kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}'   # the right host?
 skaffold dev
 ```
 
@@ -130,6 +134,9 @@ changed files under `app/` into the pod. Adjust namespace and environment in `k8
 for the target cell.
 
 ## Other templates
+
+Custom actions for NOVA Flow are created with `nova flow action create`; see
+[flow.md](flow.md).
 
 `nextjs_app` and `golang_app` generate the same `.nova`, `.env` and container files around a
 Next.js or Go project. Follow the generated `README.md` for their local dev loop; installing
