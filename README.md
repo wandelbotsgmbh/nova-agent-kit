@@ -2,7 +2,7 @@
 
 Skills and plugins for building on [Wandelbots NOVA](https://www.wandelbots.com) with AI
 coding agents. One shared skill teaches an agent the `nova` CLI - app development, the
-catalog, Nucleus files, troubleshooting - together with the safety rules for working next to
+catalog, Nucleus files, Isaac Sim streaming sessions, troubleshooting - together with the safety rules for working next to
 robots. Adapters for each agent are generated from that skill.
 
 | Agent | Adapter | Status |

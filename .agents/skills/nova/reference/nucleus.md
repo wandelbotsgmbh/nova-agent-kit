@@ -7,7 +7,8 @@ behaves differently than described here.
 
 To simulate a cell in NVIDIA Isaac Sim against an instance, the Wandelbots Isaac Sim extension
 (<https://github.com/wandelbotsgmbh/wandelbots-isaacsim-extension>) binds the robots of a USD
-scene to the instance's motion groups. It runs inside Isaac Sim, not through `nova`.
+scene to the instance's motion groups. It runs inside Isaac Sim, not through `nova`. To run
+Isaac Sim itself on a cloud GPU, see [simulation.md](simulation.md).
 
 ## Connection
 
