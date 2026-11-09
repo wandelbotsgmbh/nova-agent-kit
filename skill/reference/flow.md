@@ -22,9 +22,25 @@ page holds what the help does not say.
 - The help suggests `--yes` for scripts and agents. Use it only to carry out a delete or
   uninstall the user has confirmed for that exact flow or cell (see `SKILL.md`).
 
+## The flow file
+
+A flow is a behavior tree in JSON: a `version` (currently `"3.0"`), a `root` node and
+optional `inputs`.
+
+- Flow-control nodes (sequences, selectors, decorators, conditions) run in NOVA Flow itself.
+  Action nodes (`"kind": "action"`) name a `service` and an `operation`, for example
+  `CoreService.MotionRoutine`, and pass their parameters in `data`.
+- A tree is control flow, not a dataflow graph. A branch or gate is a `Condition` node that
+  reads the blackboard, not an action that returns a boolean.
+- NOVA Flow checks action nodes against the schemas their services registered, so
+  `--validate` catches a wrong operation or parameter before the push. Leave nodes you were
+  not asked to change as they are.
+
 ## Custom actions
 
-`nova flow action create <name> --action <Name>` creates a Python action service without
+Action services are built with the `wandelbots-novaflow` Python package (PyPI): an
+`ActionService` with one `@service.action` per operation, each with Pydantic input and output
+models. `nova flow action create <name> --action <Name>` creates such a service without
 questions. It needs `uv`, `git` and read access to the action template, which is not public
 yet; if the command cannot fetch it, tell the user. Running it locally (`uv run run.py`)
 needs the instance's NATS, which IPCs allow and cloud instances do not. Deploy it like an app

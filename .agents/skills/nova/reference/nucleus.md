@@ -5,6 +5,10 @@
 example USD scenes and assets). The command group is experimental; check `--help` when a flag
 behaves differently than described here.
 
+To simulate a cell in NVIDIA Isaac Sim against an instance, the Wandelbots Isaac Sim extension
+(<https://github.com/wandelbotsgmbh/wandelbots-isaacsim-extension>) binds the robots of a USD
+scene to the instance's motion groups. It runs inside Isaac Sim, not through `nova`.
+
 ## Connection
 
 The commands take the server from these persistent flags, or from configuration when they are

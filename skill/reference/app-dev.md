@@ -24,6 +24,16 @@ matching `nova app list` output.
 
 ## Python app loop
 
+Python apps are built on the NOVA Python SDK, the `wandelbots-nova` package on PyPI
+(`import nova`). Its source, examples (planning and executing, collision setups, several
+robots, custom TCPs) and docs are at <https://github.com/wandelbotsgmbh/wandelbots-nova>; read
+the example closest to the task before writing motion code. For a local 3D view, add the
+`nova-rerun-bridge` extra: `uv add wandelbots-nova --extra nova-rerun-bridge`.
+
+The SDK ships an agent skill, `nova-app-review`, that reviews an app for safety, motion, I/O
+and async problems. Suggest installing it into the app project with `uv run nova-skills
+install`, and re-run that after upgrading the SDK.
+
 Requires [uv](https://docs.astral.sh/uv/getting-started/installation/). Layout of a generated
 Python app:
 
@@ -112,6 +122,43 @@ Notes:
   `register_programs.py` reads `BASE_PATH` for this; build links relative to it and never
   hard-code `/`.
 
+### Poses for a real robot
+
+Poses computed or tried out on a virtual robot rarely fit the physical cell: fixtures, parts
+and the tool sit somewhere slightly different. A program meant for real hardware needs its
+poses taught or corrected on the real robot, and that is work for a person at the cell, not
+for you.
+
+- Keep poses as named, documented values (program parameters or configuration), not as
+  coordinates scattered through the code, and list for the user which ones must be taught.
+- The person teaches and adjusts them, jogs the robot and test-runs programs, with the
+  Teaching app (below) or the robot's teach pendant.
+- Never jog, teach or move the physical robot yourself to find a pose (see the motion rules
+  in `SKILL.md`).
+
+#### The Teaching app
+
+The Teaching app brings robot teaching into the browser. It shows the robot in 3D, keeps the
+cell's poses and frames in a tree, and lets a person jog the robot, teach new poses, edit
+existing ones and run routines and programs. It also loads datasets. It works with physical
+and virtual robots, including on hosted instances.
+
+Suggest it when the user has to:
+
+- teach or correct the poses a program needs on the real cell
+- move the robot by hand to check reach or clearances
+- test-run a program on the cell before handing it over
+- try out poses on a virtual robot before hardware is available
+
+It is a catalog entry (beta, NOVA 26.7 or newer). When the user wants it, check
+`nova version`, then run `nova catalog install teaching` (see [catalog.md](catalog.md)). It
+appears in `nova app list` and as a tile on the home screen (`nova homescreen` opens it).
+
+If the user needs help with it, tell them which poses to teach, under which names, and with
+which tool (TCP), because the program reads exactly those. Then let them do the jogging and
+saving in the app. You cannot see or operate its UI, so describe the goal of each step
+instead of guessing at buttons or menus.
+
 ### Hot reload on the instance (Skaffold)
 
 Use this when a program must be registered on the instance while you iterate, instead of
@@ -138,9 +185,27 @@ for the target cell.
 Custom actions for NOVA Flow are created with `nova flow action create`; see
 [flow.md](flow.md).
 
-`nextjs_app` and `golang_app` generate the same `.nova`, `.env` and container files around a
-Next.js or Go project. Follow the generated `README.md` for their local dev loop; installing
-works the same way as below.
+`nextjs_app` and `golang_app` generate the same `.nova` and container files around a Next.js
+or Go project. The Next.js template keeps the instance URL, cell and access token in
+`.env.local`, which is as secret as `.env`. Follow the generated `README.md` for their local
+dev loop; installing works the same way as below.
+
+## Design system for app UIs
+
+Before building an app's UI, ask the user which design system to use. Without a preference,
+use the Wandelbots NOVA design system, published on npm:
+
+- `@wandelbots/design-tokens` (colors, spacing, typography as CSS variables and JS),
+  `@wandelbots/fonts` and `@wandelbots/icons`.
+- One UI layer, never both: `@wandelbots/mui` (a MUI theme and components) or
+  `@wandelbots/hui` (headless components on Base UI). The `nextjs_app` template already uses
+  MUI and `@wandelbots/wandelbots-js-react-components` (robot UI such as jogging and 3D
+  views), so pick `@wandelbots/mui` there.
+- Tokens, icons and live components: <https://wandelbotsgmbh.github.io/nova-design-system/>;
+  `llms.txt` at the same address is the agent-readable version.
+
+Use tokens instead of hard-coded colors and sizes, and do not copy components out of the
+packages.
 
 ## Install on the instance
 

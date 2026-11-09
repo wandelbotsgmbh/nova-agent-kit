@@ -5,9 +5,15 @@ version mismatch.
 
 ## 1. Is the CLI installed?
 
-If `nova` is not found, tell the user to install the latest release from
-<https://github.com/wandelbotsgmbh/nova-cli/releases> (the archive contains a single `nova`
-binary to put on `PATH`). Do not substitute other tools for it.
+If `nova` is not found, tell the user to install the latest release, and leave the install to
+them. Do not substitute other tools for it. The options are:
+
+- macOS or Linux: `brew install wandelbotsgmbh/wandelbots/nova`
+- any platform: the archive from <https://github.com/wandelbotsgmbh/nova-cli/releases>,
+  holding a single `nova` binary to put on `PATH`
+- a container: `ghcr.io/wandelbotsgmbh/nova-cli:latest`
+
+The binaries are not signed yet, so macOS blocks the first run until the user allows it.
 
 ## 2. Which instance is configured, and is it reachable?
 
