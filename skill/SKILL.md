@@ -12,8 +12,13 @@ development. An instance contains *cells*; a cell holds robot *controllers* (phy
 virtual, `nova controller list`), and a controller holds one or more *motion groups*, the
 targets that actually move, named like `0@<controller>`. Motion is planned first and then
 executed, never a single call. *Apps* are containers installed on an instance, for example a
-Python service that exposes robot programs on the instance's home screen. Concepts and the
-API reference are documented at <https://docs.wandelbots.com>.
+Python service that exposes robot programs on the instance's home screen.
+
+The product documentation is at <https://docs.wandelbots.com>: NOVA Cloud, NOVA OS (versioned;
+match the instance version from `nova version`), Simulation, and Developer (Python SDK,
+datasets, NOVA Flow). Its index for agents, <https://docs.wandelbots.com/llms.txt>, lists every
+page with a summary, and each page is available as Markdown. Read the relevant page there
+for concepts, APIs and UI steps this skill does not cover.
 
 The `nova` CLI keeps a list of named instances and talks to the selected one; the global
 `--instance <name>` flag (or `NOVA_INSTANCE`) targets another one for a single invocation.
@@ -47,7 +52,7 @@ Every `nova` command and subcommand accepts `--help`; use it before guessing a f
 | Task | Read |
 | --- | --- |
 | Choose, add, create, extend or delete instances; kubeconfig; bootstrap NOVA on an IPC; licenses | [reference/instances.md](reference/instances.md) |
-| Create an app with the Python SDK or another template, its UI and design system, poses for a real robot, run it locally, install, list or delete apps | [reference/app-dev.md](reference/app-dev.md) |
+| Create an app with the Python SDK or another template, its UI and design system, datasets and poses for a real robot, the Teaching app, run it locally, install, list or delete apps | [reference/app-dev.md](reference/app-dev.md) |
 | Install NOVA Flow, edit, push, back up or restore flows, create custom flow actions | [reference/flow.md](reference/flow.md) |
 | Browse or install catalog entries - apps, drivers, camera support | [reference/catalog.md](reference/catalog.md) |
 | List, copy, move or delete files on an Omniverse Nucleus server | [reference/nucleus.md](reference/nucleus.md) |

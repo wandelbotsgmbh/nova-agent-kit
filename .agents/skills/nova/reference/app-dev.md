@@ -123,40 +123,66 @@ Notes:
   `register_programs.py` reads `BASE_PATH` for this; build links relative to it and never
   hard-code `/`.
 
-### Poses for a real robot
+### Poses for a real robot: datasets
 
 Poses computed or tried out on a virtual robot rarely fit the physical cell: fixtures, parts
 and the tool sit somewhere slightly different. A program meant for real hardware needs its
 poses taught or corrected on the real robot, and that is work for a person at the cell, not
-for you.
+for you. Never jog, teach or move the physical robot yourself to find a pose (see the motion
+rules in `SKILL.md`).
 
-- Keep poses as named, documented values (program parameters or configuration), not as
-  coordinates scattered through the code, and list for the user which ones must be taught.
-- The person teaches and adjusts them, jogs the robot and test-runs programs, with the
-  Teaching app (below) or the robot's teach pendant.
-- Never jog, teach or move the physical robot yourself to find a pose (see the motion rules
-  in `SKILL.md`).
+Keep such poses in a *dataset*, not in code. A dataset lives on the cell and holds taught
+poses, the frames they are expressed in (frames can chain, for example a fixture on a table)
+and command routines. Every change is stored as a new numbered revision. Datasets are shared
+by Python programs, NOVA Flow, the Teaching app and Isaac Sim. They need NOVA 26.7 or newer
+and `wandelbots-nova` 6.1.0 or newer, and the dataset API is experimental.
+
+```python
+from nova import datasets as ds
+
+@nova.program(
+    preconditions=nova.ProgramPreconditions(
+        controllers=[...],
+        dataset=ds.remote_dataset("pick-and-place", revision=1),  # or ds.local_dataset("poses.json")
+    ),
+)
+async def pick_and_place(ctx: nova.ProgramContext):
+    pick = ctx.dataset.poses["pick"].as_world()
+    ...
+```
+
+- Always move to `.as_world()`. `.pose` is the value relative to the pose's frame and sends
+  the robot to the wrong place when the pose has one.
+- Write the dataset identifier and the file path as plain strings. The identifier is not the
+  display name; ask the user for it if you do not know it.
+- `ds.remote_dataset` without `revision` loads the latest revision. A fixed revision keeps
+  the program on known poses until someone deliberately raises it.
+- Tell the user which poses and frames the program expects, under which names and for which
+  tool (TCP).
+- Deleting a dataset revision is destructive: ask first, as for the commands in `SKILL.md`.
 
 #### The Teaching app
 
-The Teaching app is where a person checks and tunes a program's motions, above all when a
-program moves from the virtual cell to the physical one. It brings robot teaching into the
-browser: a 3D view of the robot, the cell's poses and frames in a tree, jogging, teaching and
-editing poses, and running routines and programs. It works with physical and virtual robots,
-including on hosted instances.
+The Teaching app (also called the Robot Interface) is where a person checks and tunes a
+program's motions, above all when a program moves from the virtual cell to the physical one.
+It shows the robot and a dataset's frames and poses in 3D. The person can jog the robot,
+teach and edit poses, run command routines and programs, and publish the result as a new
+dataset revision. It works with physical and virtual robots, including on hosted instances.
 
 The usual path is:
 
-1. Develop and plan the program against the virtual cell.
+1. Develop and plan the program against the virtual cell, with its poses in a dataset.
 2. On the physical cell, the person runs it in the app, finds where the real world deviates
    from the virtual one (fixture and part positions, tool, calibration), and corrects the
-   affected poses.
-3. The app writes those corrections back as a changed dataset, so the virtual cell matches
-   the real one again.
+   affected poses and frames.
+3. The person publishes the corrections as a new dataset revision, so the virtual cell
+   matches the real one again.
+4. If the program pins a revision, raise it to the new one, after the user confirms which
+   revision to use.
 
-After step 3, the changed dataset is the source of truth. Ask the user where it is and build
-on it. Do not overwrite corrected poses with the values from your earlier simulation, and
-do not "fix" a real-world deviation by editing poses in code.
+After step 3, the published revision is the source of truth. Build on it. Do not overwrite
+corrected poses with the values from your earlier simulation, and do not "fix" a real-world
+deviation by editing poses in code.
 
 Suggest the app when the user has to:
 
@@ -169,10 +195,10 @@ It is a catalog entry (beta, NOVA 26.7 or newer). When the user wants it, check
 `nova version`, then run `nova catalog install teaching` (see [catalog.md](catalog.md)). It
 appears in `nova app list` and as a tile on the home screen (`nova homescreen` opens it).
 
-If the user needs help with it, tell them which poses to teach, under which names, and with
-which tool (TCP), because the program reads exactly those. Then let them do the jogging and
-saving in the app. You cannot see or operate its UI, so describe the goal of each step
-instead of guessing at buttons or menus.
+When the user needs help with it, point them to the dataset guide in the docs
+(<https://docs.wandelbots.com/developer/datasets.md>), which walks through editing, teaching
+and publishing poses step by step. Describe the goal of each step rather than inventing
+buttons or menus; you cannot see the app.
 
 ### Hot reload on the instance (Skaffold)
 
