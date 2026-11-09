@@ -138,17 +138,31 @@ for you.
 
 #### The Teaching app
 
-The Teaching app brings robot teaching into the browser. It shows the robot in 3D, keeps the
-cell's poses and frames in a tree, and lets a person jog the robot, teach new poses, edit
-existing ones and run routines and programs. It also loads datasets. It works with physical
-and virtual robots, including on hosted instances.
+The Teaching app is where a person checks and tunes a program's motions, above all when a
+program moves from the virtual cell to the physical one. It brings robot teaching into the
+browser: a 3D view of the robot, the cell's poses and frames in a tree, jogging, teaching and
+editing poses, and running routines and programs. It works with physical and virtual robots,
+including on hosted instances.
 
-Suggest it when the user has to:
+The usual path is:
 
-- teach or correct the poses a program needs on the real cell
-- move the robot by hand to check reach or clearances
-- test-run a program on the cell before handing it over
-- try out poses on a virtual robot before hardware is available
+1. Develop and plan the program against the virtual cell.
+2. On the physical cell, the person runs it in the app, finds where the real world deviates
+   from the virtual one (fixture and part positions, tool, calibration), and corrects the
+   affected poses.
+3. The app writes those corrections back as a changed dataset, so the virtual cell matches
+   the real one again.
+
+After step 3, the changed dataset is the source of truth. Ask the user where it is and build
+on it. Do not overwrite corrected poses with the values from your earlier simulation, and
+do not "fix" a real-world deviation by editing poses in code.
+
+Suggest the app when the user has to:
+
+- check or tune the motions of a program
+- bring a program from the virtual to the physical cell and compensate the deviations
+- teach or correct individual poses, or jog the robot to check reach and clearances
+- carry corrections from the physical cell back into the virtual one
 
 It is a catalog entry (beta, NOVA 26.7 or newer). When the user wants it, check
 `nova version`, then run `nova catalog install teaching` (see [catalog.md](catalog.md)). It
