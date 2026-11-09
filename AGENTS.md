@@ -46,7 +46,7 @@ the cost is remembering to run the build, which the failing check reminds you of
 | `test/skill.test.mjs` | frontmatter, `name` equals the skill directory, description length, line count, reference links resolve, references one level deep, agent-neutral wording, no planned commands |
 | `test/plugin.test.mjs` | manifest shapes, no pinned version, no reserved name prefixes, `userConfig` holds at most `host`, hook script behaviour, the NOVA bot module, no `bin/` |
 | `test/secrets.test.mjs` | no token-like strings, private keys or instance hostnames anywhere |
-| `test/commands.test.mjs` | every `nova <subcommand>` mentioned in the skill answers `--help`; skipped with a message when `nova` is not installed (CI installs the latest release) |
+| `test/commands.test.mjs` | every `nova <subcommand>` mentioned in the skill answers `--help` with its own usage (not a parent group's); skipped with a message when `nova` is not installed (CI installs the latest release) |
 
 ## Content rules
 

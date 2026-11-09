@@ -32,7 +32,25 @@ test(
       });
       if (result.status !== 0) {
         unknown.push(`nova ${path}: ${(result.stderr || result.stdout).trim().split("\n")[0]}`);
+        continue;
       }
+      // For an unknown subcommand of a known group, the CLI prints the group's help and
+      // exits 0. The usage lines name the command that answered: it must be the full path,
+      // or a command without subcommands whose arguments are the rest (`config set host`).
+      const usage = (result.stdout.split(/^Usage:\n/m)[1]?.split(/\n\s*\n/)[0] ?? "")
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+      const answered = [];
+      for (const token of usage[0]?.split(/\s+/) ?? []) {
+        if (!/^[a-z][a-z0-9-]*$/.test(token)) break;
+        answered.push(token);
+      }
+      const isGroup = usage.some((line) => line.includes("[command]"));
+      const words = ["nova", ...path.split(" ")];
+      const prefix = answered.every((t, i) => words[i] === t);
+      const ok = prefix && (answered.length === words.length || !isGroup);
+      if (!ok) unknown.push(`nova ${path}: --help shows the usage of "${answered.join(" ")}"`);
     }
     assert.deepEqual(unknown, [], "subcommands the installed nova CLI does not know");
   },

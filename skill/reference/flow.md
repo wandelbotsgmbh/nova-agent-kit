@@ -1,0 +1,31 @@
+# NOVA Flow
+
+NOVA Flow runs flows (behavior trees) on a cell. `nova flow` installs it on the configured
+cell and reads, writes, backs up and deletes flows; it does not run them - a person starts a
+flow from the editor (`nova flow open`). Flags and examples are in `nova flow --help`; this
+page holds what the help does not say.
+
+## Rules
+
+- Start with `nova flow status`. `open`, `push` and `backup restore` offer to install NOVA Flow
+  when it is missing; install it only when the user asked for that.
+- Edit a flow as a file: `nova flow get <id> -o <id>.json`, change it, then
+  `nova flow push <id>.json --validate`. If the push fails because the flow changed on the
+  instance, get it again and reapply the change; do not use `--force`.
+- Ask before pushing a flow the user did not ask you to change, and before any push to a cell
+  with a physical robot: the next start runs what you pushed.
+- `nova flow backup download` before `nova flow delete`, `nova flow uninstall`, a restore with
+  `--overwrite`, or deleting a cell. Run `nova flow backup restore <file> --dry-run` first and
+  show the user what would be replaced.
+- `--include-objects` adds the cell object store, which holds other apps' data too: keep such
+  an archive local.
+- The help suggests `--yes` for scripts and agents. Use it only to carry out a delete or
+  uninstall the user has confirmed for that exact flow or cell (see `SKILL.md`).
+
+## Custom actions
+
+`nova flow action create <name> --action <Name>` creates a Python action service without
+questions. It needs `uv`, `git` and read access to the action template, which is not public
+yet; if the command cannot fetch it, tell the user. Running it locally (`uv run run.py`)
+needs the instance's NATS, which IPCs allow and cloud instances do not. Deploy it like an app
+([app-dev.md](app-dev.md)); its `.env` holds an access token.

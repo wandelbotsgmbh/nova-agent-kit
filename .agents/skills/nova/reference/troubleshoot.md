@@ -18,9 +18,15 @@ nova version -v    # adds details such as the configured host
 ```
 
 - CLI version only, then an error: the host is unreachable or wrong. Check the target with
-  `nova config view` (read only `host` and `cellname`; never repeat token lines), then fix it
-  with `nova instance select <name>` or `nova config set host <url>`.
+  `nova instance info` (secrets redacted), or `nova config view` (read only `host` and
+  `cellname`; never repeat token lines). Check that `NOVA_INSTANCE` is not set to another
+  instance. Fix it with `nova --instance <name> ...`, `nova instance select <name>` or
+  `nova config set host <url>`.
 - A hosted instance may be stopped: `nova instance list`, then `nova instance start <name>`.
+  An expired one is gone; `nova instance extend` and `nova instance keep-alive` prevent that
+  (see [instances.md](instances.md)).
+- An on-premise IPC that is reachable but misbehaves (apps not starting, controller not
+  connecting): read its pods and logs with `kubectl`, see [cluster.md](cluster.md).
 - Authentication errors: the user needs to log in again with `nova login` in their own
   terminal; it opens a browser and cannot run from an agent session. Do not run
   `nova login token` instead.
@@ -50,7 +56,8 @@ use it only for the instance they named, and never for hosted instances.
 nova diagnosis download
 ```
 
-Downloads a diagnostic bundle from the instance for support cases. The bundle contains logs
+Downloads a diagnostic bundle from the instance for support cases. It is the way to get logs
+from a cloud instance, which has no kubeconfig. The bundle contains logs
 and configuration: pass it on as a file; do not paste its contents into the conversation.
 
 ## `nova mcp`

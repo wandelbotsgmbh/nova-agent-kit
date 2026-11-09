@@ -60,7 +60,7 @@ test("relative links in skill files resolve", () => {
 });
 
 test("skill content is agent neutral and avoids unavailable commands", () => {
-  const plannedCommand = /nova\s+(api|agent|status)\b|-o json/;
+  const plannedCommand = /nova\s+(api|agent|status)\b|-o json\b/;
   let plannedMentions = 0;
   for (const rel of walk(skillDir)) {
     const text = readText(join(skillDir, rel));
