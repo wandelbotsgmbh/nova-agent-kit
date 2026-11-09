@@ -24,6 +24,16 @@ matching `nova app list` output.
 
 ## Python app loop
 
+Python apps are built on the NOVA Python SDK, the `wandelbots-nova` package on PyPI
+(`import nova`). Its source, examples (planning and executing, collision setups, several
+robots, custom TCPs) and docs are at <https://github.com/wandelbotsgmbh/wandelbots-nova>; read
+the example closest to the task before writing motion code. For a local 3D view, add the
+`nova-rerun-bridge` extra: `uv add wandelbots-nova --extra nova-rerun-bridge`.
+
+The SDK ships an agent skill, `nova-app-review`, that reviews an app for safety, motion, I/O
+and async problems. Suggest installing it into the app project with `uv run nova-skills
+install`, and re-run that after upgrading the SDK.
+
 Requires [uv](https://docs.astral.sh/uv/getting-started/installation/). Layout of a generated
 Python app:
 
@@ -112,6 +122,83 @@ Notes:
   `register_programs.py` reads `BASE_PATH` for this; build links relative to it and never
   hard-code `/`.
 
+### Poses for a real robot: datasets
+
+Poses computed or tried out on a virtual robot rarely fit the physical cell: fixtures, parts
+and the tool sit somewhere slightly different. A program meant for real hardware needs its
+poses taught or corrected on the real robot, and that is work for a person at the cell, not
+for you. Never jog, teach or move the physical robot yourself to find a pose (see the motion
+rules in `SKILL.md`).
+
+Keep such poses in a *dataset*, not in code. A dataset lives on the cell and holds taught
+poses, the frames they are expressed in (frames can chain, for example a fixture on a table)
+and command routines. Every change is stored as a new numbered revision. Datasets are shared
+by Python programs, NOVA Flow, the Teaching app and Isaac Sim. They need NOVA 26.7 or newer
+and `wandelbots-nova` 6.1.0 or newer, and the dataset API is experimental.
+
+```python
+from nova import datasets as ds
+
+@nova.program(
+    preconditions=nova.ProgramPreconditions(
+        controllers=[...],
+        dataset=ds.remote_dataset("pick-and-place", revision=1),  # or ds.local_dataset("poses.json")
+    ),
+)
+async def pick_and_place(ctx: nova.ProgramContext):
+    pick = ctx.dataset.poses["pick"].as_world()
+    ...
+```
+
+- Always move to `.as_world()`. `.pose` is the value relative to the pose's frame and sends
+  the robot to the wrong place when the pose has one.
+- Write the dataset identifier and the file path as plain strings. The identifier is not the
+  display name; ask the user for it if you do not know it.
+- `ds.remote_dataset` without `revision` loads the latest revision. A fixed revision keeps
+  the program on known poses until someone deliberately raises it.
+- Tell the user which poses and frames the program expects, under which names and for which
+  tool (TCP).
+- Deleting a dataset revision is destructive: ask first, as for the commands in `SKILL.md`.
+
+#### The Teaching app
+
+The Teaching app (also called the Robot Interface) is where a person checks and tunes a
+program's motions, above all when a program moves from the virtual cell to the physical one.
+It shows the robot and a dataset's frames and poses in 3D. The person can jog the robot,
+teach and edit poses, run command routines and programs, and publish the result as a new
+dataset revision. It works with physical and virtual robots, including on hosted instances.
+
+The usual path is:
+
+1. Develop and plan the program against the virtual cell, with its poses in a dataset.
+2. On the physical cell, the person runs it in the app, finds where the real world deviates
+   from the virtual one (fixture and part positions, tool, calibration), and corrects the
+   affected poses and frames.
+3. The person publishes the corrections as a new dataset revision, so the virtual cell
+   matches the real one again.
+4. If the program pins a revision, raise it to the new one, after the user confirms which
+   revision to use.
+
+After step 3, the published revision is the source of truth. Build on it. Do not overwrite
+corrected poses with the values from your earlier simulation, and do not "fix" a real-world
+deviation by editing poses in code.
+
+Suggest the app when the user has to:
+
+- check or tune the motions of a program
+- bring a program from the virtual to the physical cell and compensate the deviations
+- teach or correct individual poses, or jog the robot to check reach and clearances
+- carry corrections from the physical cell back into the virtual one
+
+It is a catalog entry (beta, NOVA 26.7 or newer). When the user wants it, check
+`nova version`, then run `nova catalog install teaching` (see [catalog.md](catalog.md)). It
+appears in `nova app list` and as a tile on the home screen (`nova homescreen` opens it).
+
+When the user needs help with it, point them to the dataset guide in the docs
+(<https://docs.wandelbots.com/developer/datasets.md>), which walks through editing, teaching
+and publishing poses step by step. Describe the goal of each step rather than inventing
+buttons or menus; you cannot see the app.
+
 ### Hot reload on the instance (Skaffold)
 
 Use this when a program must be registered on the instance while you iterate, instead of
@@ -138,9 +225,27 @@ for the target cell.
 Custom actions for NOVA Flow are created with `nova flow action create`; see
 [flow.md](flow.md).
 
-`nextjs_app` and `golang_app` generate the same `.nova`, `.env` and container files around a
-Next.js or Go project. Follow the generated `README.md` for their local dev loop; installing
-works the same way as below.
+`nextjs_app` and `golang_app` generate the same `.nova` and container files around a Next.js
+or Go project. The Next.js template keeps the instance URL, cell and access token in
+`.env.local`, which is as secret as `.env`. Follow the generated `README.md` for their local
+dev loop; installing works the same way as below.
+
+## Design system for app UIs
+
+Before building an app's UI, ask the user which design system to use. Without a preference,
+use the Wandelbots NOVA design system, published on npm:
+
+- `@wandelbots/design-tokens` (colors, spacing, typography as CSS variables and JS),
+  `@wandelbots/fonts` and `@wandelbots/icons`.
+- One UI layer, never both: `@wandelbots/mui` (a MUI theme and components) or
+  `@wandelbots/hui` (headless components on Base UI). The `nextjs_app` template already uses
+  MUI and `@wandelbots/wandelbots-js-react-components` (robot UI such as jogging and 3D
+  views), so pick `@wandelbots/mui` there.
+- Tokens, icons and live components: <https://wandelbotsgmbh.github.io/nova-design-system/>;
+  `llms.txt` at the same address is the agent-readable version.
+
+Use tokens instead of hard-coded colors and sizes, and do not copy components out of the
+packages.
 
 ## Install on the instance
 
