@@ -13,7 +13,13 @@
   updates. It is decoration only - keep everything the kit needs working out of it.
 - `scripts/build.mjs` is the only place that knows the adapter layouts (plugin manifest,
   hooks, `.mcp.json`, marketplace manifest).
-- The kit version lives in `package.json`; the build copies it into the manifests.
+- Versions live in git tags only, cut by semantic-release (`.releaserc.json`,
+  `.github/workflows/release.yml`): `x.y.z-rc.N` from `main`, stable `x.y.z` from `release`,
+  which only `.github/workflows/promote.yml` (or `git push origin <sha>:release`) moves.
+  Never add a `version` to `package.json` or the manifests: without one, Claude Code versions
+  the plugin by commit SHA, which is what makes every commit on a channel an update. Since
+  commit types decide the next version, pick `feat`/`fix` versus `docs`/`chore` deliberately.
+  How to cut and promote a release: `RELEASING.md`.
 
 ## Commands
 
@@ -22,7 +28,7 @@ pnpm install                 # once; Node 22 or newer, pnpm (npm works too)
 pnpm build                   # skill/ + nova-bot/ -> plugin/; skill/ -> .agents/skills/nova/; marketplace.json
 pnpm test                    # node:test suite, see below
 pnpm lint:md                 # markdownlint-cli2
-pnpm validate:plugin         # claude plugin validate --strict (needs the Claude Code CLI)
+pnpm validate:plugin         # claude plugin validate, strict except the missing version (needs the Claude Code CLI)
 pnpm validate:skill          # Agent Skills spec validator (needs uv)
 pnpm check                   # all of the above, in CI order
 ```
@@ -38,7 +44,7 @@ the cost is remembering to run the build, which the failing check reminds you of
 | --- | --- |
 | `test/generated.test.mjs` | generated output matches `skill/` and `nova-bot/` |
 | `test/skill.test.mjs` | frontmatter, `name` equals the skill directory, description length, line count, reference links resolve, references one level deep, agent-neutral wording, no planned commands |
-| `test/plugin.test.mjs` | manifest shapes, version from `package.json`, no reserved name prefixes, `userConfig` holds at most `host`, hook script behaviour, the NOVA bot module, no `bin/` |
+| `test/plugin.test.mjs` | manifest shapes, no pinned version, no reserved name prefixes, `userConfig` holds at most `host`, hook script behaviour, the NOVA bot module, no `bin/` |
 | `test/secrets.test.mjs` | no token-like strings, private keys or instance hostnames anywhere |
 | `test/commands.test.mjs` | every `nova <subcommand>` mentioned in the skill answers `--help` with its own usage (not a parent group's); skipped with a message when `nova` is not installed (CI installs the latest release) |
 

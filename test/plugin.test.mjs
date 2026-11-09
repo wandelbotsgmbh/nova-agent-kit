@@ -24,9 +24,16 @@ function assertAllowedName(name, what) {
   assert.doesNotMatch(name, /\b(claude|anthropic|anthropics)\b/i, `${what} must not contain a vendor name`);
 }
 
-test("plugin.json has the required fields and the kit version", () => {
+// Versions live in git tags only: without a manifest version Claude Code versions the
+// plugin by commit SHA, so every commit on the tracked branch reaches users.
+test("no manifest pins a version", () => {
+  assert.equal(pkg.version, undefined, "package.json must not carry a version (tags do)");
+  assert.equal(plugin.version, undefined, "plugin.json must not pin a version");
+  assert.equal(marketplace.plugins[0].version, undefined, "the marketplace entry must not pin a version");
+});
+
+test("plugin.json has the required fields", () => {
   assertAllowedName(plugin.name, "plugin name");
-  assert.equal(plugin.version, pkg.version, "plugin version must come from package.json");
   assert.ok(plugin.description);
   assert.ok(plugin.author?.name);
   assert.equal(plugin.license, pkg.license);
@@ -47,7 +54,6 @@ test("marketplace.json points at ./plugin with matching metadata", () => {
   const [entry] = marketplace.plugins;
   assert.equal(entry.name, plugin.name);
   assert.equal(entry.source, "./plugin");
-  assert.equal(entry.version, pkg.version);
 });
 
 test(".mcp.json launches nova mcp without credentials", () => {

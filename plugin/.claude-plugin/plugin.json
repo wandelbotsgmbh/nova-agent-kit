@@ -1,6 +1,5 @@
 {
   "name": "nova",
-  "version": "0.1.0",
   "description": "Work with Wandelbots NOVA through the nova CLI: create and install apps, use the catalog, manage Nucleus files and troubleshoot instances.",
   "author": {
     "name": "Wandelbots"

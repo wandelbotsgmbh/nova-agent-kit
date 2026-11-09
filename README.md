@@ -24,14 +24,44 @@ robots. Adapters for each agent are generated from that skill.
 
 ### Claude Code
 
+Pick a channel when you add the marketplace, then install the plugin:
+
 ```text
-/plugin install nova --marketplace wandelbotsgmbh/nova-agent-kit
+/plugin marketplace add wandelbotsgmbh/nova-agent-kit#release
+/plugin install nova@nova-agent-kit
 ```
 
-Older Claude Code versions use two steps: `/plugin marketplace add wandelbotsgmbh/nova-agent-kit`,
-then `/plugin install nova@nova-agent-kit`. The repository is private for now, so your `gh`
-or git credentials need access to it; from a local checkout, use
-`/plugin marketplace add /path/to/nova-agent-kit` instead.
+`#release` is the stable channel. Leave it out to follow `main`, which gets every merged
+change first (the `-rc` releases). Both channels use the marketplace name `nova-agent-kit`,
+so add only one of them. To switch channels, remove the marketplace and add the other one:
+
+```text
+/plugin marketplace remove nova-agent-kit
+/plugin marketplace add wandelbotsgmbh/nova-agent-kit
+/plugin install nova@nova-agent-kit
+```
+
+Claude Code does not auto-update plugins from third-party marketplaces by default. Turn it on
+in `/plugin` > Marketplaces, or run `claude plugin update nova@nova-agent-kit` yourself.
+
+The repository is private for now, so your `gh` or git credentials need access to it. From a
+local checkout, use `/plugin marketplace add /path/to/nova-agent-kit` instead; that follows
+whatever is checked out there, not a channel.
+
+To offer the plugin to everyone working in a project, declare the marketplace and its channel
+in the project's `.claude/settings.json`. Claude Code then asks each user to install it when
+they trust the project folder:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "nova-agent-kit": {
+      "source": { "source": "github", "repo": "wandelbotsgmbh/nova-agent-kit", "ref": "release" }
+    }
+  },
+  "enabledPlugins": { "nova@nova-agent-kit": true }
+}
+```
 
 The plugin adds:
 
@@ -86,13 +116,17 @@ test/                     node:test suite
 evals/                    eval cases for `claude plugin eval` (not run in CI)
 ```
 
-See [AGENTS.md](AGENTS.md) for how to change the skill and run the checks, and
-[HARNESSES.md](HARNESSES.md) for what each agent supports.
+See [CONTRIBUTING.md](CONTRIBUTING.md) to get started, [AGENTS.md](AGENTS.md) for how to
+change the skill and run the checks, and [HARNESSES.md](HARNESSES.md) for what each agent
+supports. Report vulnerabilities as described in [SECURITY.md](SECURITY.md).
 
 ## Versioning
 
-The version in `package.json` is the kit version; the build writes it into the plugin and
-marketplace manifests. Release tagging is a follow-up.
+Releases work as in the nova-cli repository: every merge to `main` with a `feat` or `fix`
+commit gets an `x.y.z-rc.N` prerelease, and promoting a verified rc to the `release` branch
+cuts the stable `x.y.z`. The version lives in git tags only; the manifests carry no
+`version`, so Claude Code versions the plugin by commit SHA and every commit on a channel is
+an update. [RELEASING.md](RELEASING.md) explains the steps and the reasons.
 
 ## License
 
