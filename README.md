@@ -73,7 +73,9 @@ The plugin adds:
   and falls asleep when nothing happens. It is just for fun and changes nothing about how the
   agent works. `/nova-bot` hides it and shows it again; the choice is remembered across
   sessions. Terminals that can show images (for example Ghostty, kitty or WezTerm) draw it in
-  real pixels; other terminals use block characters. It is built on Claude Code's
+  real pixels; other terminals use block characters. `/nova-bot hd` or `/nova-bot blocks`
+  forces one of the two, `/nova-bot auto` goes back to asking the terminal; that choice is
+  remembered too. It is built on Claude Code's
   hooks-module API, which is in early access and may change between Claude Code releases.
 
 ### Agents that read `.agents/skills/`
