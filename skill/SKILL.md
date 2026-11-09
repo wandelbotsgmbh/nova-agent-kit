@@ -55,8 +55,8 @@ Every `nova` command and subcommand accepts `--help`; use it before guessing a f
 | Create an app with the Python SDK or another template, its UI and design system, datasets and poses for a real robot, the Teaching app, run it locally, install, list or delete apps | [reference/app-dev.md](reference/app-dev.md) |
 | Install NOVA Flow, edit, push, back up or restore flows, create custom flow actions | [reference/flow.md](reference/flow.md) |
 | Browse or install catalog entries - apps, drivers, camera support | [reference/catalog.md](reference/catalog.md) |
-| List, copy, move or delete files on an Omniverse Nucleus server | [reference/nucleus.md](reference/nucleus.md) |
-| Start, open, extend, suspend or delete an Isaac Sim streaming session (Omniverse in the cloud) | [reference/simulation.md](reference/simulation.md) |
+| Add or select a Nucleus server; list, copy, move or delete files on it | [reference/nucleus.md](reference/nucleus.md) |
+| Start, open, extend, suspend or delete an Isaac Sim streaming session (Omniverse in the cloud; Wandelbots employees only) | [reference/simulation.md](reference/simulation.md) |
 | Connection errors, version mismatch, diagnostics, TLS problems, `nova mcp` | [reference/troubleshoot.md](reference/troubleshoot.md) |
 | Pods, logs and events of an on-premise IPC or `k8srun` cluster with `kubectl` | [reference/cluster.md](reference/cluster.md) |
 | Show the user a planned path, the collision scene or robot poses (3D view or plot) | [reference/visualize.md](reference/visualize.md) |
