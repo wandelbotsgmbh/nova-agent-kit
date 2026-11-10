@@ -7,21 +7,39 @@ behaves differently than described here.
 
 To simulate a cell in NVIDIA Isaac Sim against an instance, the Wandelbots Isaac Sim extension
 (<https://github.com/wandelbotsgmbh/wandelbots-isaacsim-extension>) binds the robots of a USD
-scene to the instance's motion groups. It runs inside Isaac Sim, not through `nova`.
+scene to the instance's motion groups. It runs inside Isaac Sim, not through `nova`. To run
+Isaac Sim itself on a cloud GPU, see [simulation.md](simulation.md).
 
-## Connection
+## Access
 
-The commands take the server from these persistent flags, or from configuration when they are
-omitted:
+The Nucleus servers Wandelbots hosts are for Wandelbots employees. Other users work with an
+Omniverse Nucleus server of their own, or ask their Wandelbots contact person. Do not guess
+host names; take them from `nova nucleus server list` or from the user.
 
-| Flag | Meaning |
-| --- | --- |
-| `--nucleus-host <host>` | Nucleus server to talk to |
-| `--nucleus-token <token>` | authentication token; prefer the `NUCLEUS_TOKEN` environment variable so the token never appears in the command line or shell history |
-| `--nucleus-tls` | use TLS (`wss://`), default `true`; set `--nucleus-tls=false` only for a local development server |
+## Servers
 
-Never print the token. If the user has to provide it, ask them to export `NUCLEUS_TOKEN` in
-their shell rather than pasting it into the conversation.
+The CLI keeps its own list of Nucleus servers, independent of the NOVA instance. Commands
+work against the selected server, or the one named with `--nucleus <name>` (or
+`NOVA_NUCLEUS`) for a single invocation:
+
+```sh
+nova nucleus server list                 # known servers; '*' marks the selected one
+nova nucleus server select <name>        # change the default
+nova nucleus ls / --nucleus <name>       # one command against another server
+```
+
+A token is stored per server and only sent to that server's host. Adding a server needs its
+token, so ask the user to run this in their own terminal, with the token in `NUCLEUS_TOKEN`:
+
+```sh
+printf '%s' "$NUCLEUS_TOKEN" | nova nucleus server add <name> --host <host> --token-stdin
+```
+
+`--nucleus-host`, `--nucleus-token`, `NUCLEUS_TOKEN` and `--nucleus-tls` override the
+selected server for one invocation. Never pass a token with `--nucleus-token` or
+`nova config set nucleus-token`, and never print one. Set `--nucleus-tls=false` only for a
+local development server. `nova nucleus server remove <name>` deletes the server's stored
+token too.
 
 ## Paths
 
