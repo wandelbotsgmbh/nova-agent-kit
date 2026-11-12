@@ -22,6 +22,14 @@ Cloud instances and `k8srun` clusters expire. For long work, run
 recreating them. `nova instance delete` and `nova k8srun destroy` are destructive (see
 `SKILL.md`).
 
+`nova k8srun prune` forgets entries whose cluster is gone; it never releases a cluster.
+Without a terminal it removes nothing unless `-y` is given: run it with `--dry-run` first and
+pass `-y` only for entries the user agreed to drop.
+
+An entry kept with `its kubeconfig ... has N contexts` holds credentials of other clusters
+(kubectl or kind added them after `nova instance env`). `nova instance remove <name>` deletes
+that file with them: ask the user first, so they can save the other contexts.
+
 ## Kubeconfig
 
 `nova instance kubeconfig [name]` prints the path of the instance's kubeconfig, and
