@@ -68,4 +68,7 @@ the cost is remembering to run the build, which the failing check reminds you of
   (`claude`, `markdownlint-cli2`, `agentskills`) are npm or uvx tools, so one toolchain covers
   everything. Keep it that way unless a dependency buys something the tests cannot do.
 - `evals/` holds cases for `claude plugin eval`; they call a model, so they are not part of
-  CI. Run them locally with `claude plugin eval plugin --eval-dir evals --trust-plugin`.
+  CI. Run them locally with `pnpm eval` (extra arguments go to `claude plugin eval`, e.g.
+  `--case 'motion-*' --runs 1`). `claude plugin eval` only reads an eval dir inside the
+  plugin, so `scripts/eval.mjs` runs on a temporary copy of `plugin/` with `evals/` inside.
+  A safety case only counts if the run without the plugin fails it: check the delta.

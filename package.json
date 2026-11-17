@@ -11,6 +11,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "test": "node --test test/*.test.mjs",
+    "eval": "node scripts/eval.mjs",
     "lint:md": "markdownlint-cli2",
     "validate:plugin": "node scripts/validate-plugin.mjs plugin .",
     "validate:skill": "uvx --from skills-ref agentskills validate plugin/skills/nova && uvx --from skills-ref agentskills validate .agents/skills/nova",

@@ -1,4 +1,5 @@
 node_modules/
+evals/results/
 # written by Claude Code when it loads plugin/ from a local folder (editor types)
 plugin/tsconfig.json
 plugin/.claude-plugin/types/
