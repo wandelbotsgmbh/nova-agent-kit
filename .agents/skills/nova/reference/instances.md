@@ -11,6 +11,9 @@ are in `nova instance --help`; this page holds what the help does not say.
 - Target an instance for one command with `nova --instance <name> ...` (or
   `NOVA_INSTANCE=<name>`). Run `nova instance select <name>` only when the user asks to change
   the default: the selection is shared with their other terminals and agent sessions.
+- `nova instance create` and `nova k8srun create` select the new instance as well, which
+  switches the user's other sessions. Pass `--no-select` and target it with `--instance`,
+  unless the user asked for the switch.
 - Register an IPC once with `nova instance add <name> --host <url>`; nothing changes on the
   host. `nova instance remove <name>` only forgets the entry.
 - Check the target with `nova instance info`. Never add `--show-secrets`.
@@ -19,8 +22,8 @@ are in `nova instance --help`; this page holds what the help does not say.
 
 Cloud instances and `k8srun` clusters expire. For long work, run
 `nova instance keep-alive [name] -- <command>` or `nova instance extend [name]` instead of
-recreating them. `nova instance delete` and `nova k8srun destroy` are destructive (see
-`SKILL.md`).
+recreating them. `nova instance delete` and `nova k8srun destroy` are destructive
+([safety.md](safety.md)).
 
 `nova k8srun prune` forgets entries whose cluster is gone; it never releases a cluster.
 Without a terminal it removes nothing unless `-y` is given: run it with `--dry-run` first and

@@ -55,19 +55,9 @@ nova nucleus cp n:/Projects/demo/a.usd n:/Projects/demo/b.usd     # copy on the 
 nova nucleus cp -p ./scene.usd n:/Projects/new/dir/scene.usd      # create missing parent directories
 ```
 
-## Commands
-
-```sh
-nova nucleus ls /Projects/              # list a directory (default /); -l for details
-nova nucleus stat /Projects/scene.usd   # metadata of one file or directory
-nova nucleus mkdir /Projects/new-dir/   # create a directory
-nova nucleus cp <source> <dest>         # copy, see above; -p/--parents creates parents
-nova nucleus mv /Projects/old.usd /Projects/new.usd   # move or rename on the server
-nova nucleus rm /Projects/old.usd       # delete; -r/--recursive for non-empty directories
-```
-
 Use `cp -p` when the destination directory may not exist yet, instead of running `mkdir` for
-every level.
+every level. The other commands (`ls`, `stat`, `mkdir`, `mv`, `rm`) are in
+`nova nucleus --help`.
 
 ## Safety
 

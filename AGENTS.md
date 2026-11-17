@@ -43,21 +43,21 @@ the cost is remembering to run the build, which the failing check reminds you of
 | File | Checks |
 | --- | --- |
 | `test/generated.test.mjs` | generated output matches `skill/` and `nova-bot/` |
-| `test/skill.test.mjs` | frontmatter, `name` equals the skill directory, description length, line count, reference links resolve, references one level deep, agent-neutral wording, no planned commands |
+| `test/skill.test.mjs` | frontmatter, `name` equals the skill directory, description length, line count, reference links resolve, references one level deep, agent-neutral wording, no unreleased commands |
 | `test/plugin.test.mjs` | manifest shapes, no pinned version, no reserved name prefixes, `userConfig` holds at most `host`, hook script behaviour, the NOVA bot module, no `bin/` |
 | `test/secrets.test.mjs` | no token-like strings, private keys or instance hostnames anywhere |
 | `test/commands.test.mjs` | every `nova <subcommand>` mentioned in the skill answers `--help` with its own usage (not a parent group's); skipped with a message when `nova` is not installed (CI installs the latest release) |
 
 ## Content rules
 
-- Document only commands that exist in the released CLI. Mention planned commands at most
-  once, in `SKILL.md`, and mark them as planned.
+- Document only commands that exist in the released CLI; do not mention planned ones.
 - Agent-neutral wording: "run `nova app list`", never the name of an agent's tool.
-- `SKILL.md` stays under 500 lines; references are one level deep (`reference/*.md`, no
+- `SKILL.md` is loaded with every task: keep it short (the test caps it at 500 lines, aim for
+  about 100) and put details in references; references are one level deep (`reference/*.md`, no
   subdirectories); every reference is linked from the routing table in `SKILL.md`.
 - Safety rules (secrets, robot motion, destructive commands, untrusted data) come from the
   architecture decisions in the nova-cli repository (`docs/decisions`). Keep them when
-  restructuring.
+  restructuring: a short form in `SKILL.md`, the full form in `reference/safety.md`.
 - No secrets, no instance or cluster hostnames, no personal names, no internal project
   names - the repository may become public.
 
