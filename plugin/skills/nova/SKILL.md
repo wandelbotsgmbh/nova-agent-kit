@@ -21,8 +21,9 @@ every page, each available as Markdown. Match the NOVA OS docs to the instance v
 Run `nova version`: it prints the CLI version and the targeted instance's version. If `nova`
 is missing, tell the user to install it from
 <https://github.com/wandelbotsgmbh/nova-cli/releases> and stop. If the instance does not
-answer, read [reference/troubleshoot.md](reference/troubleshoot.md). The Claude Code plugin's
-session-start hook only checks that `nova` is on `PATH`.
+answer, read [reference/troubleshoot.md](reference/troubleshoot.md). `nova instance info` shows
+the targeted instance and cell with secrets redacted. The Claude Code plugin's session-start
+hook only checks that `nova` is on `PATH`.
 
 Every command and subcommand accepts `--help`; read it before guessing a flag. Commands that
 print data accept `-o json` (data on stdout, messages on stderr); use it whenever you read
