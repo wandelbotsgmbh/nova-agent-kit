@@ -3,7 +3,9 @@
     "nova": {
       "command": "nova",
       "args": [
-        "mcp"
+        "mcp",
+        "--toolsets",
+        "default,planning,motion"
       ]
     }
   }

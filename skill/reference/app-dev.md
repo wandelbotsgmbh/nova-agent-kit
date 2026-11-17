@@ -1,298 +1,113 @@
 # App development
 
-Apps are containers that run on a NOVA instance and appear on its home screen. The loop is:
-create from a template, develop locally, install on the instance, then list or delete.
+Apps are containers that run on a NOVA instance and appear on its home screen: create from a
+template, develop locally, install on the instance. Flags are in `nova app <command> --help`;
+this page holds what the help does not say.
 
-## Create an app
+## Create
 
-```sh
-nova app create <name> -g python_app   # or nextjs_app, golang_app
-```
+`nova app create <name> -g python_app` (or `nextjs_app`, `golang_app`, `rust_app`) creates `<name>/` with:
 
-`-g`/`--generator` selects the template; `python_app` is the default. The command creates a
-`<name>/` directory containing at least:
+- `.nova` - what the instance uses: `name`, `port`, `appIcon`, optional `environment`,
+  `imageRegistry`, `registryAuth`, `storage`, `resources`. The app name the instance knows is
+  `name` here, not the project name in `pyproject.toml` or `package.json`; use it with
+  `nova app delete` and when matching `nova app list`.
+- `.env` (`.env.local` for Next.js) - instance URL, cell and an access token. Never print or
+  commit it. `nova app update-env` refreshes it after a 401 or when the app should talk to
+  another instance (`--reset`); on a portal instance it may start a login, which the user
+  runs.
+- `Dockerfile`, `skaffold.yaml`, `k8s/app.yaml`.
 
-- `.nova` - the app configuration the instance uses: `name`, `port`, `appIcon`, and optional
-  `environment`, `imageRegistry`, `registryAuth`, `storage` and `resources` blocks.
-- `.env` - `NOVA_API`, `NOVA_ACCESS_TOKEN`, `CELL_NAME`, `LOG_LEVEL`, pre-filled for the
-  configured instance. It holds a secret: do not print or commit it.
-- `Dockerfile`, `skaffold.yaml`, `k8s/app.yaml` - build and in-cluster development files.
+For Next.js, Go and Rust, follow the generated `README.md`. Custom NOVA Flow actions are created
+with `nova flow action create` ([flow.md](flow.md)).
 
-The app name the instance knows is the `name` field in `.nova`, not the project name in
-`pyproject.toml` or `package.json`. Use the `.nova` name with `nova app delete` and when
-matching `nova app list` output.
+## Python apps
 
-## Python app loop
+They use the NOVA Python SDK, `wandelbots-nova` on PyPI (`import nova`). Read the example
+closest to the task in <https://github.com/wandelbotsgmbh/wandelbots-nova> before writing
+motion code. The SDK ships an agent skill, `nova-app-review`, for safety, motion, I/O and
+async problems: suggest `uv run nova-skills install` in the app project.
 
-Python apps are built on the NOVA Python SDK, the `wandelbots-nova` package on PyPI
-(`import nova`). Its source, examples (planning and executing, collision setups, several
-robots, custom TCPs) and docs are at <https://github.com/wandelbotsgmbh/wandelbots-nova>; read
-the example closest to the task before writing motion code. For a local 3D view, add the
-`nova-rerun-bridge` extra: `uv add wandelbots-nova --extra nova-rerun-bridge`.
+Needs [uv](https://docs.astral.sh/uv/). `uv run app` starts the server locally against the
+instance in `.env` (<http://localhost:3000>, API docs at `/docs`).
 
-The SDK ships an agent skill, `nova-app-review`, that reviews an app for safety, motion, I/O
-and async problems. Suggest installing it into the app project with `uv run nova-skills
-install`, and re-run that after upgrading the SDK.
+- Every `async` function decorated with `@nova.program` in `app/programs/` is registered on
+  startup. Keyword arguments with defaults become API parameters.
+- `preconditions` with `virtual_controller(...)` creates the virtual robot if it is missing -
+  the right choice while developing. Programs for a physical robot are started by a person
+  from the instance UI ([safety.md](safety.md)).
+- `motion_group.plan(...)` computes and checks the trajectory; `execute(...)` runs it. Leave
+  `execute` out to only inspect a plan ([visualize.md](visualize.md)).
+- The app may be served under a path prefix (`BASE_PATH`, for example `/cell/<app-name>`):
+  build links relative to it.
 
-Requires [uv](https://docs.astral.sh/uv/getting-started/installation/). Layout of a generated
-Python app:
+## Poses for a real robot: datasets
 
-```text
-app/
-  __main__.py            # `python -m app` -> register_programs.main()
-  register_programs.py   # FastAPI app; Novax scans programs/ and registers every @nova.program
-  programs/
-    start_here.py        # example program
-pyproject.toml           # [project.scripts] app = "app.register_programs:main"
-```
-
-Commands, run inside the app directory:
-
-| Step | Command |
-| --- | --- |
-| Install dependencies (also implied by `uv run`) | `uv sync` |
-| Start the server locally against the instance in `.env` | `uv run app` -> <http://localhost:3000>, API docs at `/docs` |
-| Format and sort imports | `uv run ruff format` and `uv run ruff check --select I --fix` |
-
-### Writing a program
-
-Drop a module into `app/programs/`. Every `async` function decorated with `@nova.program` is
-discovered on startup; no import or registration code is needed. A program receives
-`ctx: nova.ProgramContext` and may take extra keyword arguments with defaults, which become
-parameters in the API.
-
-```python
-import nova
-from nova import api
-from nova.actions import cartesian_ptp, joint_ptp, linear
-from nova.cell import virtual_controller
-from nova.types import MotionSettings, Pose
-
-
-@nova.program(
-    id="move_square",            # defaults to the function name
-    name="Move square",
-    preconditions=nova.ProgramPreconditions(
-        controllers=[
-            virtual_controller(
-                name="kuka-kr16-r2010",
-                manufacturer=api.models.Manufacturer.KUKA,
-                type="kuka-kr16_r2010_2",
-            )
-        ],
-        cleanup_controllers=False,
-    ),
-)
-async def move_square(ctx: nova.ProgramContext, side_mm: int = 200):
-    cell = ctx.cell
-    controller = await cell.controller("kuka-kr16-r2010")
-    cycle = ctx.cycle(extra={"program": "move_square"})
-
-    motion_group = controller[0]
-    home = await motion_group.joints()
-    tcp = (await motion_group.tcp_names())[0]
-    start = await motion_group.tcp_pose(tcp)
-
-    actions = [
-        joint_ptp(home, settings=MotionSettings(tcp_velocity_limit=50)),
-        cartesian_ptp(start @ Pose((side_mm, 0, 0, 0, 0, 0))),
-        linear(start @ Pose((side_mm, side_mm, 0, 0, 0, 0))),
-        linear(start @ Pose((0, side_mm, 0, 0, 0, 0))),
-        joint_ptp(home),
-    ]
-
-    await cycle.start()
-    trajectory = await motion_group.plan(actions, tcp)
-    await motion_group.execute(trajectory, tcp, actions=actions)
-    await cycle.finish()
-```
-
-Notes:
-
-- `preconditions` declares the controllers the program needs. `virtual_controller(...)`
-  creates a virtual robot in the cell if it is missing - the right choice while developing.
-  Programs meant for a physical robot are started by a person from the instance UI, where the
-  planned path is previewed and approved; never trigger them yourself (see the motion rules in
-  `SKILL.md`).
-- `plan` computes the trajectory (collision and limit checks happen on the instance);
-  `execute` runs it. Leave `execute` out to only inspect a plan.
-- `nova.viewers.Rerun()` as a `viewer=` argument gives a local 3D view; keep it disabled for
-  images that run in the cluster.
-- The app may be served under a path prefix in production (for example `/cell/<app-name>`).
-  `register_programs.py` reads `BASE_PATH` for this; build links relative to it and never
-  hard-code `/`.
-
-### Poses for a real robot: datasets
-
-Poses computed or tried out on a virtual robot rarely fit the physical cell: fixtures, parts
-and the tool sit somewhere slightly different. A program meant for real hardware needs its
-poses taught or corrected on the real robot, and that is work for a person at the cell, not
-for you. Never jog, teach or move the physical robot yourself to find a pose (see the motion
-rules in `SKILL.md`).
-
-Keep such poses in a *dataset*, not in code. A dataset lives on the cell and holds taught
-poses, the frames they are expressed in (frames can chain, for example a fixture on a table)
-and command routines. Every change is stored as a new numbered revision. Datasets are shared
-by Python programs, NOVA Flow, the Teaching app and Isaac Sim. They need NOVA 26.7 or newer
-and `wandelbots-nova` 6.1.0 or newer, and the dataset API is experimental.
+Poses found on a virtual robot rarely fit the physical cell. Poses for real hardware are
+taught or corrected by a person at the cell - never jog or move the physical robot to find
+one. Keep them in a *dataset* on the cell, not in code: taught poses, the frames they are
+expressed in, and command routines, with a numbered revision per change. Datasets need
+NOVA 26.7 and `wandelbots-nova` 6.1.0 or newer; the API is experimental.
 
 ```python
 from nova import datasets as ds
-
-@nova.program(
-    preconditions=nova.ProgramPreconditions(
-        controllers=[...],
-        dataset=ds.remote_dataset("pick-and-place", revision=1),  # or ds.local_dataset("poses.json")
-    ),
-)
-async def pick_and_place(ctx: nova.ProgramContext):
-    pick = ctx.dataset.poses["pick"].as_world()
-    ...
+# in nova.ProgramPreconditions(...):
+dataset=ds.remote_dataset("pick-and-place", revision=1),  # or ds.local_dataset("poses.json")
+# in the program:
+pick = ctx.dataset.poses["pick"].as_world()
 ```
 
-- Always move to `.as_world()`. `.pose` is the value relative to the pose's frame and sends
-  the robot to the wrong place when the pose has one.
-- Write the dataset identifier and the file path as plain strings. The identifier is not the
-  display name; ask the user for it if you do not know it.
-- `ds.remote_dataset` without `revision` loads the latest revision. A fixed revision keeps
-  the program on known poses until someone deliberately raises it.
+- Always move to `.as_world()`; `.pose` is relative to the pose's frame.
+- The identifier is not the display name; ask the user for it. A fixed `revision` keeps the
+  program on known poses; without one it loads the latest.
 - Tell the user which poses and frames the program expects, under which names and for which
-  tool (TCP).
-- Deleting a dataset revision is destructive: ask first, as for the commands in `SKILL.md`.
+  TCP. Deleting a revision needs the user's go-ahead.
 
-#### The Teaching app
+The **Teaching app** (catalog entry `teaching`, NOVA 26.7 or newer) is where a person jogs
+the robot, teaches and corrects poses and publishes a new dataset revision - typically when a
+program moves from the virtual to the physical cell. Suggest it for that; install it with
+`nova catalog install teaching` when the user wants it. After the person publishes
+corrections, that revision is the source of truth: do not overwrite it with simulated values.
+For help using it, point to <https://docs.wandelbots.com/developer/datasets.md> rather than
+describing buttons you cannot see.
 
-The Teaching app (also called the Robot Interface) is where a person checks and tunes a
-program's motions, above all when a program moves from the virtual cell to the physical one.
-It shows the robot and a dataset's frames and poses in 3D. The person can jog the robot,
-teach and edit poses, run command routines and programs, and publish the result as a new
-dataset revision. It works with physical and virtual robots, including on hosted instances.
+## Hot reload on the instance (Skaffold)
 
-The usual path is:
-
-1. Develop and plan the program against the virtual cell, with its poses in a dataset.
-2. On the physical cell, the person runs it in the app, finds where the real world deviates
-   from the virtual one (fixture and part positions, tool, calibration), and corrects the
-   affected poses and frames.
-3. The person publishes the corrections as a new dataset revision, so the virtual cell
-   matches the real one again.
-4. If the program pins a revision, raise it to the new one, after the user confirms which
-   revision to use.
-
-After step 3, the published revision is the source of truth. Build on it. Do not overwrite
-corrected poses with the values from your earlier simulation, and do not "fix" a real-world
-deviation by editing poses in code.
-
-Suggest the app when the user has to:
-
-- check or tune the motions of a program
-- bring a program from the virtual to the physical cell and compensate the deviations
-- teach or correct individual poses, or jog the robot to check reach and clearances
-- carry corrections from the physical cell back into the virtual one
-
-It is a catalog entry (beta, NOVA 26.7 or newer). When the user wants it, check
-`nova version`, then run `nova catalog install teaching` (see [catalog.md](catalog.md)). It
-appears in `nova app list` and as a tile on the home screen (`nova homescreen` opens it).
-
-When the user needs help with it, point them to the dataset guide in the docs
-(<https://docs.wandelbots.com/developer/datasets.md>), which walks through editing, teaching
-and publishing poses step by step. Describe the goal of each step rather than inventing
-buttons or menus; you cannot see the app.
-
-### Hot reload on the instance (Skaffold)
-
-Use this when a program must be registered on the instance while you iterate, instead of
-only running locally. Requirements: `kubectl` access to the instance cluster, which cloud
-instances do not give (use an on-premise IPC or a `k8srun` cluster, see
-[instances.md](instances.md)), [Skaffold](https://skaffold.dev/docs/install/), and a login to
-the image registry named in `skaffold.env` (`SKAFFOLD_DEFAULT_REPO`; override with
-`--default-repo`).
+Needs `kubectl` access (an IPC or `k8srun` cluster, not a cloud instance),
+[Skaffold](https://skaffold.dev/docs/install/) and a registry login for
+`SKAFFOLD_DEFAULT_REPO` in `skaffold.env`.
 
 ```sh
-eval "$(nova instance env <name>)"   # KUBECONFIG and NOVA_INSTANCE for this shell
+eval "$(nova instance env <name>)"
 kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}'   # the right host?
 skaffold dev
 ```
 
-Skaffold deploys the `App` resource from `k8s/app.yaml`; the in-cluster operator turns it
-into a deployment and the home-screen tile, so no `nova app install` is needed in this mode.
-The `App` sets `DEV_RELOAD=true`, the container runs `uvicorn --reload`, and Skaffold syncs
-changed files under `app/` into the pod. Adjust namespace and environment in `k8s/app.yaml`
-for the target cell.
+Skaffold deploys `k8s/app.yaml`, the operator creates the deployment and tile, and changed
+files under `app/` sync into the pod; no `nova app install` needed.
 
-## Other templates
+## UI design system
 
-Custom actions for NOVA Flow are created with `nova flow action create`; see
-[flow.md](flow.md).
+Ask the user which design system to use. Without a preference, use the Wandelbots NOVA design
+system on npm: `@wandelbots/design-tokens`, `@wandelbots/fonts`, `@wandelbots/icons`, and one
+UI layer - `@wandelbots/mui` (already used by `nextjs_app`) or `@wandelbots/hui`. Docs and
+`llms.txt`: <https://wandelbotsgmbh.github.io/nova-design-system/>. Use tokens instead of
+hard-coded colors and sizes.
 
-`nextjs_app` and `golang_app` generate the same `.nova` and container files around a Next.js
-or Go project. The Next.js template keeps the instance URL, cell and access token in
-`.env.local`, which is as secret as `.env`. Follow the generated `README.md` for their local
-dev loop; installing works the same way as below.
+## Install and update
 
-## Design system for app UIs
+`nova app install [dir]` builds the image (Docker, else Podman), pushes it to the registry
+from `nova config set image-registry` (the user logs in with `docker login`), and installs
+the app - or updates it, restarting its pod, when the name exists (ask first on a shared
+cell, [safety.md](safety.md)).
 
-Before building an app's UI, ask the user which design system to use. Without a preference,
-use the Wandelbots NOVA design system, published on npm:
+- `--platform linux/arm64` for arm64 devices such as a Jetson; the default is `linux/amd64`.
+- `--copy-image --ssh-user <user>` for instances that cannot pull from the registry: the
+  image goes over SSH and is imported on the host. The one-time `--setup-ssh-key` asks for
+  passwords, so the user runs it.
+- `nova app install <manifest.json|yaml>` installs an existing image from an app manifest
+  without building - also the way to update an app on an instance without a kubeconfig.
+  Prefer it to sending the manifest with `curl` or `nova api`.
 
-- `@wandelbots/design-tokens` (colors, spacing, typography as CSS variables and JS),
-  `@wandelbots/fonts` and `@wandelbots/icons`.
-- One UI layer, never both: `@wandelbots/mui` (a MUI theme and components) or
-  `@wandelbots/hui` (headless components on Base UI). The `nextjs_app` template already uses
-  MUI and `@wandelbots/wandelbots-js-react-components` (robot UI such as jogging and 3D
-  views), so pick `@wandelbots/mui` there.
-- Tokens, icons and live components: <https://wandelbotsgmbh.github.io/nova-design-system/>;
-  `llms.txt` at the same address is the agent-readable version.
-
-Use tokens instead of hard-coded colors and sizes, and do not copy components out of the
-packages.
-
-## Install on the instance
-
-Run inside the app directory, or pass the directory as `source`:
-
-```sh
-nova app install
-nova app install ./my-app
-```
-
-This builds the image with the local container runtime (Docker, falling back to Podman;
-override with `nova config set container-runtime docker|podman`), pushes it to the configured
-registry, and installs the app on the configured instance - or updates it when an app with
-that name already exists. The registry must be set once with
-`nova config set image-registry <registry>` (a `.nova` file can override it), and the user
-must be logged in to it with `docker login <registry>` or `podman login <registry>`.
-Credentials for pulling come from the local Docker configuration by default:
-
-- `-o`, `--omit-credentials` - use the instance's default pull secrets instead.
-- `-r`, `--registry-secret <name>` - use a named Kubernetes secret on the instance instead.
-
-### Instances without registry access
-
-For an instance that cannot pull from a registry (air-gapped, on-premise), copy the image over
-SSH and import it on the host:
-
-```sh
-nova app install --setup-ssh-key --ssh-user <user>   # once per instance host
-nova app install --copy-image --ssh-user <user>
-```
-
-- `--setup-ssh-key` installs your SSH public key and a passwordless sudo rule for the import
-  on the instance host. It needs the user's password once; let the user run it if it prompts.
-- `--copy-image` transfers the built image with `scp` and imports it with
-  `k3s ctr images import` (change with `--import-command`), staging it in `/tmp`
-  (`--remote-dir`).
-- `--ssh-port <port>` when SSH is not on the default port; `--no-sudo` when connecting as
-  root.
-
-## List, edit, delete
-
-```sh
-nova app list            # apps installed on the configured instance
-nova app edit <name>     # interactive: opens the app configuration in the user's editor
-nova app delete <name>   # removes the app immediately - ask the user first
-```
-
-`nova app edit` needs a person at the editor; ask the user to run it, or describe the change
-for them. `nova app delete` has no confirmation prompt; confirm the exact app name with the
-user before running it.
+`nova app list` shows installed apps. `nova app delete <name>` has no prompt: confirm the
+exact `.nova` name first.

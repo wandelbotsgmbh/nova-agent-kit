@@ -60,16 +60,11 @@ test("relative links in skill files resolve", () => {
 });
 
 test("skill content is agent neutral and avoids unavailable commands", () => {
-  const plannedCommand = /nova\s+(api|agent|status)\b|-o json\b/;
-  let plannedMentions = 0;
+  // Commands that are planned but not released; the skill documents released commands only.
+  const plannedCommand = /nova\s+(agent|status)\b/;
   for (const rel of walk(skillDir)) {
     const text = readText(join(skillDir, rel));
     assert.doesNotMatch(text, /\bBash tool\b/i, `${rel} must not reference a specific agent tool`);
-    for (const paragraph of text.split(/\n\s*\n/)) {
-      if (!plannedCommand.test(paragraph)) continue;
-      assert.match(paragraph, /\bplanned\b/, `${rel} uses a planned command as if it existed`);
-      plannedMentions += 1;
-    }
+    assert.doesNotMatch(text, plannedCommand, `${rel} mentions a command that is not released`);
   }
-  assert.ok(plannedMentions <= 1, "planned commands are mentioned in at most one place");
 });

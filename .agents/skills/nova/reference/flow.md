@@ -12,7 +12,11 @@ page holds what the help does not say.
   when it is missing; install it only when the user asked for that.
 - Edit a flow as a file: `nova flow get <id> -o <id>.json`, change it, then
   `nova flow push <id>.json --validate`. If the push fails because the flow changed on the
-  instance, get it again and reapply the change; do not use `--force`.
+  instance, get it again and reapply the change; do not use `--force`. `nova flow edit` does
+  the same in the user's editor, so it is for the user to run.
+- For authoring flows from an agent, `nova flow mcp` serves NOVA Flow's own MCP server over
+  stdio (NOVA Flow 2026.9 or newer). Suggest it to the user; do not change their MCP
+  configuration yourself.
 - Ask before pushing a flow the user did not ask you to change, and before any push to a cell
   with a physical robot: the next start runs what you pushed.
 - `nova flow backup download` before `nova flow delete`, `nova flow uninstall`, a restore with
@@ -21,7 +25,7 @@ page holds what the help does not say.
 - `--include-objects` adds the cell object store, which holds other apps' data too: keep such
   an archive local.
 - The help suggests `--yes` for scripts and agents. Use it only to carry out a delete or
-  uninstall the user has confirmed for that exact flow or cell (see `SKILL.md`).
+  uninstall the user has confirmed for that exact flow or cell ([safety.md](safety.md)).
 
 ## The flow file
 
@@ -34,8 +38,10 @@ optional `inputs`.
 - A tree is control flow, not a dataflow graph. A branch or gate is a `Condition` node that
   reads the blackboard, not an action that returns a boolean.
 - NOVA Flow checks action nodes against the schemas their services registered, so
-  `--validate` catches a wrong operation or parameter before the push. Leave nodes you were
-  not asked to change as they are.
+  `--validate` catches a wrong operation and most parameter errors before the push.
+  References (`{"ref": ...}`) nested inside `data` are not checked and fail only when the flow
+  runs; check them against the blackboard and inputs yourself. Leave nodes you were not asked
+  to change as they are.
 
 ## Custom actions
 

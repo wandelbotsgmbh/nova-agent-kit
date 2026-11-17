@@ -79,18 +79,9 @@ if __name__ == "__main__":
 
 ## Plots without a 3D viewer
 
-A plan is a `JointTrajectory` with `times` and `joint_positions`. For "is it smooth" and
-"which joint is slow", a joint-over-time plot with `matplotlib` is enough:
-
-```python
-import matplotlib.pyplot as plt
-
-trajectory = await motion_group.plan(t.actions, tcp)
-times = trajectory.times
-for i in range(len(trajectory.joint_positions[0].joints)):
-    plt.plot(times, [p.joints[i] for p in trajectory.joint_positions], label=f"joint {i}")
-plt.xlabel("s"); plt.ylabel("rad"); plt.legend(); plt.savefig("joints.png")
-```
+A plan is a `JointTrajectory` with `times` and `joint_positions` (one `.joints` list per
+point). For "is it smooth" and "which joint is slow", plot each joint over time with
+`matplotlib`.
 
 Save the figure to a file next to the script and tell the user where it is. For the TCP path
 against its targets, log the plan to Rerun instead; computing TCP poses from joints needs
@@ -102,4 +93,4 @@ The preview is the basis for the human's approval, so it has to be the same plan
 run. Plan once, show that plan, and request the motion with the identifier of that plan.
 If anything changes, plan and show again. The approval itself is the human's answer to a
 dialog NOVA asks through your client, or an approval in an app or the NOVA UI; never
-answer it yourself. See the motion rules in `SKILL.md`.
+answer it yourself ([safety.md](safety.md)).
