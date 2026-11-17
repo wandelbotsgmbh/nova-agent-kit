@@ -67,7 +67,9 @@ The plugin adds:
 
 - the `nova` skill (`/nova:nova`), loaded automatically when a task mentions NOVA;
 - a session-start hook that tells the agent when `nova` is missing from `PATH`;
-- the MCP server `nova`, started as `nova mcp` (experimental; the skill prefers the CLI);
+- the MCP server `nova`, started as `nova mcp --toolsets default,planning,motion`: reads
+  instance state, and plans and runs motion on virtual controllers only (physical ones answer
+  `APPROVAL_REQUIRED`);
 - the NOVA bot: a small pixel-art robot above the prompt that reacts to what the agent is
   doing. It thinks, puts on a hard hat while `nova` commands run, cheers when a turn is done
   and falls asleep when nothing happens. It is just for fun and changes nothing about how the
@@ -89,12 +91,12 @@ directory (`~/.agents/skills/`). To add the MCP server as well:
 
 ```jsonc
 // OpenCode: opencode.json
-{ "mcp": { "nova": { "type": "local", "command": ["nova", "mcp"] } } }
+{ "mcp": { "nova": { "type": "local", "command": ["nova", "mcp", "--toolsets", "default,planning,motion"] } } }
 ```
 
 ```sh
 # pi
-pi mcp add nova -- nova mcp
+pi mcp add nova -- nova mcp --toolsets default,planning,motion
 ```
 
 ### Offline and air-gapped use

@@ -60,7 +60,7 @@ test(".mcp.json launches nova mcp without credentials", () => {
   assert.deepEqual(Object.keys(mcp.mcpServers), ["nova"]);
   const server = mcp.mcpServers.nova;
   assert.equal(server.command, "nova");
-  assert.deepEqual(server.args, ["mcp"]);
+  assert.deepEqual(server.args, ["mcp", "--toolsets", "default,planning,motion"]);
   for (const key of Object.keys(server.env ?? {})) {
     assert.doesNotMatch(key, secretLike, `env ${key} looks like a credential`);
   }

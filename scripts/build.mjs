@@ -131,7 +131,7 @@ writeFile(join(pluginDir, "hooks", "check-nova.sh"), checkNovaScript, 0o755);
 
 writeJson(join(pluginDir, ".mcp.json"), {
   mcpServers: {
-    nova: { command: "nova", args: ["mcp"] },
+    nova: { command: "nova", args: ["mcp", "--toolsets", "default,planning,motion"] },
   },
 });
 
