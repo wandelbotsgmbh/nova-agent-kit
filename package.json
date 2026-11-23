@@ -18,6 +18,6 @@
     "check": "pnpm build && git diff --exit-code -- plugin .agents .claude-plugin && pnpm test && pnpm lint:md && pnpm validate:plugin && pnpm validate:skill"
   },
   "devDependencies": {
-    "markdownlint-cli2": "^0.24.0"
+    "markdownlint-cli2": "^0.24.2"
   }
 }
