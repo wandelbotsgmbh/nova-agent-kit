@@ -53,7 +53,7 @@ jobs:
       - name: claude plugin validate
         run: node scripts/validate-plugin.mjs plugin .
       # setup-uv publishes no moving major tag; Dependabot bumps the exact version.
-      - uses: astral-sh/setup-uv@v10.3.3
+      - uses: astral-sh/setup-uv@v10.4.0
       - name: Agent Skills spec
         run: |
           uvx --from skills-ref agentskills validate plugin/skills/nova
