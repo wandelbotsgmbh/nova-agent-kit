@@ -53,6 +53,7 @@ including moving a physical robot.
 | Update an app from an existing image, without a build or kubeconfig | `nova app install <manifest.json>` |
 | Refresh a generated app's `.env` after a 401 or an instance switch | `nova app update-env` |
 | Create an instance or cluster without switching other sessions | `--no-select` on `nova instance create` and `nova k8srun create` |
+| Keep a cloud instance or `k8srun` cluster from expiring during long work | `nova instance keep-alive <name>` as a background task, or `nova instance keep-alive <name> -- <command>` |
 
 ## Where to look
 

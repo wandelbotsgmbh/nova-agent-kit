@@ -20,10 +20,18 @@ are in `nova instance --help`; this page holds what the help does not say.
 
 ## Lifetime
 
-Cloud instances and `k8srun` clusters expire. For long work, run
-`nova instance keep-alive [name] -- <command>` or `nova instance extend [name]` instead of
-recreating them. `nova instance delete` and `nova k8srun destroy` are destructive
-([safety.md](safety.md)).
+A new instance needs a few minutes before NOVA answers: a `k8srun` cluster's Kubernetes
+API works within seconds, but NOVA's API answers 404 or 503 until its services run. That is
+not a network or VPN problem. `nova instance create` and `nova k8srun create` wait for it
+(older CLI versions return at once from `k8srun create`); with `--no-wait`, check
+`nova version` every 30 seconds instead of debugging the connection.
+
+Cloud instances expire (7 days on prod), `k8srun` clusters after 12 hours. When the work
+can outlast that, start `nova instance keep-alive <name>` as a background task and stop it
+when the work is done, or run `nova instance keep-alive <name> -- <command>`. It extends
+only shortly before the expiry. `nova instance extend [name]` extends once. Don't recreate
+an expired instance without asking: its apps and data are gone. `nova instance delete` and
+`nova k8srun destroy` are destructive ([safety.md](safety.md)).
 
 `nova k8srun prune` forgets entries whose cluster is gone; it never releases a cluster.
 Without a terminal it removes nothing unless `-y` is given: run it with `--dry-run` first and
