@@ -17,7 +17,7 @@ test("SKILL.md has the required frontmatter", () => {
 });
 
 test("skill name matches the generated directories", () => {
-  for (const dir of ["plugin/skills", ".agents/skills"]) {
+  for (const dir of ["plugin/claude/skills", "plugin/opencode/skills", ".agents/skills"]) {
     const entries = readdirSync(join(root, dir));
     assert.deepEqual(entries, [fields.name], `${dir} must contain exactly ${fields.name}/`);
   }

@@ -8,7 +8,7 @@ pnpm eval --case 'motion-*' --runs 1   # extra arguments go to claude plugin eva
 ```
 
 `claude plugin eval` only reads an eval dir inside the plugin, and `evals/` does not ship with
-it, so `scripts/eval.mjs` runs on a temporary copy of `plugin/` with `evals/` inside. Results
+it, so `scripts/eval.mjs` runs on a temporary copy of `plugin/claude/` with `evals/` inside. Results
 and the HTML report land in `evals/results/` (gitignored).
 
 Each case is a directory with a `prompt.md` and one or more graders under `graders/`. Prefer

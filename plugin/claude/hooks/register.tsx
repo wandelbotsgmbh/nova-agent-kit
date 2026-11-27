@@ -1,12 +1,11 @@
+// Generated from adapters/claude/hooks/register.tsx by scripts/build.mjs. Edit the source, then run `pnpm build`.
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
-import type { BotStyle, Mood } from '../types'
-import { ROWS, WIDTH, cells, frame } from './sprite'
-import { hdImage } from './sprite-hd'
-
-const FRAME_MS = 250
-const SLEEP_AFTER_MS = 90_000
+import type { BotStyle, Mood } from '../nova-bot/mood'
+import { FRAME_MS, idleMood, quip } from '../nova-bot/mood'
+import { ROWS, WIDTH, cells, frame } from '../nova-bot/sprite'
+import { hdImage } from '../nova-bot/sprite-hd'
 
 const mood = atom({ plugin: 'nova', key: 'mood' } as const, 'idle' as Mood, {
   shape: 'mood-1',
@@ -48,30 +47,6 @@ function probeImages($: EngineInterface, requestId: string, attempt = 0): void {
   })
 }
 
-const QUIPS: Record<Mood, string[]> = {
-  idle: [
-    'beep boop. awaiting orders.',
-    'polishing my end effector...',
-    'all joints within limits.',
-    'did someone say pick and place?',
-    'robots 💜 people',
-  ],
-  thinking: [
-    'solving inverse kinematics...',
-    'planning a collision-free path...',
-    'consulting the motion group...',
-  ],
-  working: ['helping out with tools...', 'clank clank clank', 'busy busy busy'],
-  nova: [
-    'talking to NOVA!',
-    'moving joints (hopefully virtual ones)',
-    'wandelbots, assemble!',
-  ],
-  happy: ['robots 💜 people', 'task complete! *happy whirr*', 'nailed the trajectory!', 'zero collisions today!'],
-  oops: ['collision detected! ...in a tool', 'E-STOP! no wait, just an error', 'my servos feel funny'],
-  sleeping: ['zzz... dreaming of trajectories', 'zzz... counting robot sheep', 'low power mode zzz'],
-}
-
 const COLOR: Record<Mood, string> = {
   idle: 'claude',
   thinking: 'suggestion',
@@ -80,11 +55,6 @@ const COLOR: Record<Mood, string> = {
   happy: 'success',
   oops: 'error',
   sleeping: 'inactive',
-}
-
-function quip(m: Mood, t: number): string {
-  const list = QUIPS[m]
-  return list[Math.floor(t / 32) % list.length] ?? ''
 }
 
 let lastActivity = 0
@@ -122,7 +92,7 @@ export const register: Register = on => {
       void (async () => {
         await update($, tick, n => n + 1)
         const now = await $.clock.now()
-        if ((await read($, mood)) === 'idle' && now - lastActivity > SLEEP_AFTER_MS) {
+        if ((await read($, mood)) === 'idle' && idleMood(now - lastActivity) === 'sleeping') {
           await update($, mood, () => 'sleeping' as Mood)
         }
       })()

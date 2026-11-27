@@ -13,8 +13,8 @@
     "test": "node --test test/*.test.mjs",
     "eval": "node scripts/eval.mjs",
     "lint:md": "markdownlint-cli2",
-    "validate:plugin": "node scripts/validate-plugin.mjs plugin .",
-    "validate:skill": "uvx --from skills-ref agentskills validate plugin/skills/nova && uvx --from skills-ref agentskills validate .agents/skills/nova",
+    "validate:plugin": "node scripts/validate-plugin.mjs plugin/claude .",
+    "validate:skill": "uvx --from skills-ref agentskills validate plugin/claude/skills/nova && uvx --from skills-ref agentskills validate plugin/opencode/skills/nova && uvx --from skills-ref agentskills validate .agents/skills/nova",
     "check": "pnpm build && git diff --exit-code -- plugin .agents .claude-plugin && pnpm test && pnpm lint:md && pnpm validate:plugin && pnpm validate:skill"
   },
   "devDependencies": {

@@ -7,9 +7,10 @@ robots. Adapters for each agent are generated from that skill.
 
 | Agent | Adapter | Status |
 | --- | --- | --- |
-| Claude Code | `plugin/` (plugin + marketplace) | supported |
+| Claude Code | `plugin/claude/` (via marketplace) | supported |
 | Any agent that reads `.agents/skills/` | `.agents/skills/nova/` | supported |
-| OpenCode, pi | `.agents/skills/nova/` (read directly) | documented, see [HARNESSES.md](HARNESSES.md) |
+| OpenCode V2 | `plugin/opencode/` or `.agents/skills/nova/` | see [HARNESSES.md](HARNESSES.md) |
+| pi | `.agents/skills/nova/` (read directly) | documented, see [HARNESSES.md](HARNESSES.md) |
 | Cursor, Codex | - | planned, see [HARNESSES.md](HARNESSES.md) |
 
 ## Prerequisites
@@ -80,6 +81,33 @@ The plugin adds:
   remembered too. It is built on Claude Code's
   hooks-module API, which is in early access and may change between Claude Code releases.
 
+### OpenCode V2
+
+Install the NOVA plugin from the stable `release` branch with OpenCode's plugin manager:
+
+```sh
+opencode plugin add 'github:wandelbotsgmbh/nova-agent-kit#release::path:plugin/opencode'
+```
+
+Use `#main` instead to follow the preview channel. The repository is private; your Git
+credentials need access. The plugin registers the NOVA skill and its references without a
+manual copy. In the terminal, an animated pixel-art robot reacts to the current chat
+and tool activity. Its quips are decoration, not robot status. Use `/nova-bot` to
+show or hide it, or `/nova-bot hd`, `/nova-bot blocks`, or `/nova-bot auto` to pick
+its style. OpenCode draws both styles with terminal characters.
+Mention `@nova` in a prompt to load the skill explicitly. The plugin checks for `nova`
+on the OpenCode server's `PATH` when a session is created, or before its first model
+request if the creation event was missed. If `nova` is missing, the agent gets an
+installation hint.
+When `nova` is on the server's `PATH`, the plugin registers the same MCP toolsets as
+Claude Code: `nova mcp --toolsets default,planning,motion`. The MCP server only runs
+motion and writes robot I/O on virtual controllers. To change or disable the server,
+define your own `nova` entry under `mcp.servers`; it takes precedence.
+
+For local development, use the absolute path to the generated `plugin/opencode/` directory
+in the `plugins` array of `opencode.json(c)`. To hide just the robot, use a plugin entry with
+`"options": { "mascot": false }`.
+
 ### Agents that read `.agents/skills/`
 
 Copy `.agents/skills/nova/` into your project's `.agents/skills/` directory (or wherever your
@@ -90,8 +118,14 @@ OpenCode and pi discover `.agents/skills/` on their own, in the project and in t
 directory (`~/.agents/skills/`). To add the MCP server as well:
 
 ```jsonc
-// OpenCode: opencode.json
-{ "mcp": { "nova": { "type": "local", "command": ["nova", "mcp", "--toolsets", "default,planning,motion"] } } }
+// OpenCode V2: opencode.jsonc
+{
+  "mcp": {
+    "servers": {
+      "nova": { "type": "local", "command": ["nova", "mcp", "--toolsets", "default,planning,motion"] }
+    }
+  }
+}
 ```
 
 ```sh
@@ -110,11 +144,14 @@ instance.
 ## Repository layout
 
 ```text
-skill/                    the skill: SKILL.md + reference/*.md - the only hand-edited content
-nova-bot/                 the NOVA bot: hooks module, state types and icon - hand-edited
-scripts/build.mjs         generates the adapters below from skill/ and nova-bot/
-plugin/                   generated Claude Code plugin, including the NOVA bot
-.claude-plugin/           generated marketplace manifest pointing at ./plugin
+skill/                    the shared skill: SKILL.md + reference/*.md
+nova-bot/                 shared NOVA bot logic and artwork - hand-edited
+adapters/claude/          Claude Code bot hook and state types - hand-edited
+adapters/opencode/        OpenCode server and terminal plugin sources
+scripts/build.mjs         generates the adapters below from the sources above
+plugin/claude/            generated Claude Code plugin, including the NOVA bot
+plugin/opencode/          generated OpenCode V2 plugin, including the NOVA bot
+.claude-plugin/           generated marketplace manifest pointing at ./plugin/claude
 .agents/skills/nova/      generated plain skill tree
 test/                     node:test suite
 evals/                    eval cases for `claude plugin eval` (not run in CI)
