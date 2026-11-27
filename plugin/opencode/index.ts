@@ -2,6 +2,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { Plugin, Skill } from "@opencode/plugin";
+import { novaMcpCommand } from "./mcp-command.ts";
 
 export default Plugin.define({
   id: "nova-agent-kit",
@@ -22,6 +23,16 @@ export default Plugin.define({
         content: content.trim(),
       });
     });
+
+    if (Bun.which(novaMcpCommand[0])) {
+      await ctx.mcp.transform((editor) => {
+        if (editor.get("nova")) return;
+        editor.set("nova", {
+          type: "local",
+          command: novaMcpCommand,
+        });
+      });
+    }
 
     const hasNova = new Map<string, boolean>();
     const events = new AbortController();

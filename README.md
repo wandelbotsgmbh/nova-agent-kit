@@ -99,7 +99,10 @@ Mention `@nova` in a prompt to load the skill explicitly. The plugin checks for 
 on the OpenCode server's `PATH` when a session is created, or before its first model
 request if the creation event was missed. If `nova` is missing, the agent gets an
 installation hint.
-MCP is configured separately.
+When `nova` is on the server's `PATH`, the plugin registers the same MCP toolsets as
+Claude Code: `nova mcp --toolsets default,planning,motion`. The MCP server only runs
+motion and writes robot I/O on virtual controllers. To change or disable the server,
+define your own `nova` entry under `mcp.servers`; it takes precedence.
 
 For local development, use the absolute path to the generated `plugin/opencode/` directory
 in the `plugins` array of `opencode.json(c)`. To hide just the robot, use a plugin entry with
@@ -115,8 +118,14 @@ OpenCode and pi discover `.agents/skills/` on their own, in the project and in t
 directory (`~/.agents/skills/`). To add the MCP server as well:
 
 ```jsonc
-// OpenCode: opencode.json
-{ "mcp": { "nova": { "type": "local", "command": ["nova", "mcp", "--toolsets", "default,planning,motion"] } } }
+// OpenCode V2: opencode.jsonc
+{
+  "mcp": {
+    "servers": {
+      "nova": { "type": "local", "command": ["nova", "mcp", "--toolsets", "default,planning,motion"] }
+    }
+  }
+}
 ```
 
 ```sh

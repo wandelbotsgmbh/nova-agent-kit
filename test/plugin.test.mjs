@@ -4,6 +4,7 @@ import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
+import { novaMcpCommand } from "../plugin/opencode/mcp-command.ts";
 
 import { botSourceDir, isDirectory, pluginDir, readJson, readText, root, walk } from "./helpers.mjs";
 
@@ -83,6 +84,11 @@ test(".mcp.json launches nova mcp without credentials", () => {
   for (const key of Object.keys(server.env ?? {})) {
     assert.doesNotMatch(key, secretLike, `env ${key} looks like a credential`);
   }
+});
+
+test("OpenCode ships the same NOVA MCP command as Claude Code", () => {
+  const { command, args } = mcp.mcpServers.nova;
+  assert.deepEqual(novaMcpCommand, [command, ...args]);
 });
 
 test("hooks.json registers an executable SessionStart check", () => {
