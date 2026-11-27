@@ -2,7 +2,7 @@
 // kitty graphics draw it at any size; the others fall back to sprite.ts.
 // Colours are NOVA design tokens (zero-gravity theme) unless noted.
 
-import type { Mood } from '../types'
+import type { Mood } from './mood'
 
 const SPRITE_W = 28
 const SPRITE_H = 34
@@ -97,7 +97,7 @@ function stamp(c: Canvas, part: string[], x: number, y: number, colors: Record<s
   })
 }
 
-function pixels(m: Mood, t: number): Canvas {
+export function pixels(m: Mood, t: number): Canvas {
   const c: Canvas = Array.from({ length: SPRITE_H }, () => Array<number | null>(SPRITE_W).fill(null))
 
   const hop = m === 'happy' && t % 4 < 2

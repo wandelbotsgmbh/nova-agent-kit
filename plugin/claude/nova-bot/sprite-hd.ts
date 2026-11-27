@@ -1,9 +1,9 @@
-// Generated from nova-bot/hooks/sprite-hd.ts by scripts/build.mjs. Edit the source, then run `pnpm build`.
+// Generated from nova-bot/sprite-hd.ts by scripts/build.mjs. Edit the source, then run `pnpm build`.
 // The detailed NOVA robot as real pixels, for an Image element: terminals with
 // kitty graphics draw it at any size; the others fall back to sprite.ts.
 // Colours are NOVA design tokens (zero-gravity theme) unless noted.
 
-import type { Mood } from '../types'
+import type { Mood } from './mood'
 
 const SPRITE_W = 28
 const SPRITE_H = 34
@@ -98,7 +98,7 @@ function stamp(c: Canvas, part: string[], x: number, y: number, colors: Record<s
   })
 }
 
-function pixels(m: Mood, t: number): Canvas {
+export function pixels(m: Mood, t: number): Canvas {
   const c: Canvas = Array.from({ length: SPRITE_H }, () => Array<number | null>(SPRITE_W).fill(null))
 
   const hop = m === 'happy' && t % 4 < 2

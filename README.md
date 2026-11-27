@@ -91,11 +91,16 @@ opencode plugin add 'github:wandelbotsgmbh/nova-agent-kit#release::path:plugin/o
 
 Use `#main` instead to follow the preview channel. The repository is private; your Git
 credentials need access. The plugin registers the NOVA skill and its references without a
-manual copy. Mention `@nova` in a prompt to load the skill explicitly. The `nova` CLI
-remains a prerequisite, and MCP is configured separately.
+manual copy. In the terminal, an animated pixel-art robot reacts to the current chat
+and tool activity. Its quips are decoration, not robot status. Use `/nova-bot` to
+show or hide it, or `/nova-bot hd`, `/nova-bot blocks`, or `/nova-bot auto` to pick
+its style. OpenCode draws both styles with terminal characters.
+Mention `@nova` in a prompt to load the skill explicitly. The `nova` CLI remains a
+prerequisite, and MCP is configured separately.
 
 For local development, use the absolute path to the generated `plugin/opencode/` directory
-in the `plugins` array of `opencode.json(c)`.
+in the `plugins` array of `opencode.json(c)`. To hide just the robot, use a plugin entry with
+`"options": { "mascot": false }`.
 
 ### Agents that read `.agents/skills/`
 
@@ -128,11 +133,12 @@ instance.
 
 ```text
 skill/                    the shared skill: SKILL.md + reference/*.md
-nova-bot/                 the NOVA bot: hooks module, state types and icon - hand-edited
+nova-bot/                 shared NOVA bot logic and artwork - hand-edited
+adapters/claude/          Claude Code bot hook and state types - hand-edited
 adapters/opencode/        OpenCode server and terminal plugin sources
 scripts/build.mjs         generates the adapters below from the sources above
 plugin/claude/            generated Claude Code plugin, including the NOVA bot
-plugin/opencode/          generated OpenCode V2 plugin
+plugin/opencode/          generated OpenCode V2 plugin, including the NOVA bot
 .claude-plugin/           generated marketplace manifest pointing at ./plugin/claude
 .agents/skills/nova/      generated plain skill tree
 test/                     node:test suite

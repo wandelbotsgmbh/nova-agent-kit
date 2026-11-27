@@ -135,10 +135,12 @@ test("plugin contains exactly the generated skill, the NOVA bot and manifests", 
   const expected = [
     ".claude-plugin/plugin.json",
     ".mcp.json",
+    "assets/icon.png",
     "hooks/check-nova.sh",
     "hooks/hooks.json",
     ...skillFiles,
-    ...walk(botSourceDir),
+    ...walk(join(root, "adapters", "claude")),
+    ...walk(botSourceDir).filter((f) => f !== "assets/icon.png").map((f) => `nova-bot/${f}`),
   ].sort();
   assert.deepEqual(files, expected);
 });

@@ -1,4 +1,4 @@
-// Generated from nova-bot/hooks/sprite.ts by scripts/build.mjs. Edit the source, then run `pnpm build`.
+// Generated from nova-bot/sprite.ts by scripts/build.mjs. Edit the source, then run `pnpm build`.
 // Tiny pixel-art NOVA robot for a Raster. Two layers:
 // - pixels: half blocks, one terminal cell = two square pixels (top as the
 //   foreground of '▀', bottom as its background);
@@ -6,7 +6,7 @@
 //   a few pixels would not read. A glyph cell takes its background from the pixels.
 // Colours are NOVA design tokens (zero-gravity theme) unless noted.
 
-import type { Mood } from '../types'
+import type { Mood } from './mood'
 
 export const WIDTH = 9 // terminal columns: 7 robot + 2 for effects
 export const ROWS = 4 // terminal rows

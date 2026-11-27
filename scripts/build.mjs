@@ -57,7 +57,7 @@ function withGeneratedMarker(rel, content) {
 // Hooks-module sources get a comment line; other files are copied byte for byte.
 function withGeneratedComment(rel, content) {
   if (!/\.(ts|tsx)$/.test(rel)) return content;
-  return `// Generated from nova-bot/${rel} by scripts/build.mjs. Edit the source, then run \`pnpm build\`.\n${content}`;
+  return `// Generated from ${rel} by scripts/build.mjs. Edit the source, then run \`pnpm build\`.\n${content}`;
 }
 
 function writeFile(path, content, mode) {
@@ -103,13 +103,24 @@ writeJson(join(opencodeDir, "package.json"), {
   name: "nova-agent-kit-opencode",
   type: "module",
   license: pkg.license,
-  exports: { ".": "./index.ts" },
+  exports: { ".": "./index.ts", "./tui": "./tui.tsx" },
+  peerDependencies: {
+    "@opentui/core": ">=0.6.6",
+    "@opentui/solid": ">=0.6.6",
+    "solid-js": ">=1.9.0",
+  },
 });
 for (const rel of listFiles(join(root, "adapters", "opencode"))) {
-  if (rel === "tui.tsx" || rel === "mood.ts") continue;
   const source = `adapters/opencode/${rel}`;
-  writeFile(join(opencodeDir, rel), `// Generated from ${source} by scripts/build.mjs. Edit the source, then run \`pnpm build\`.\n${readFileSync(join(root, source), "utf8")}`);
+  const content = readFileSync(join(root, source), "utf8").replaceAll('"../../nova-bot/', '"./nova-bot/');
+  writeFile(join(opencodeDir, rel), withGeneratedComment(source, content));
 }
+for (const rel of listFiles(botSourceDir)) {
+  if (rel === "assets/icon.png") continue;
+  const content = withGeneratedComment(`nova-bot/${rel}`, readFileSync(join(botSourceDir, rel), "utf8"));
+  for (const dir of [pluginDir, opencodeDir]) writeFile(join(dir, "nova-bot", rel), content);
+}
+writeFile(join(pluginDir, "assets", "icon.png"), readFileSync(join(botSourceDir, "assets", "icon.png")));
 writeJson(join(pluginDir, ".claude-plugin", "plugin.json"), {
   name: pluginName,
   // No version: Claude Code then versions the plugin by commit SHA, so every
@@ -149,11 +160,13 @@ writeJson(join(pluginDir, ".mcp.json"), {
   },
 });
 
-// The NOVA bot: its hooks module, state contract and icon, copied into the plugin.
-for (const rel of listFiles(botSourceDir)) {
-  const source = join(botSourceDir, rel);
-  if (/\.(ts|tsx)$/.test(rel)) writeFile(join(pluginDir, rel), withGeneratedComment(rel, readFileSync(source, "utf8")));
-  else writeFile(join(pluginDir, rel), readFileSync(source));
+// Claude's NOVA bot hooks module and state contract, copied into the plugin.
+for (const rel of listFiles(join(root, "adapters", "claude"))) {
+  const source = `adapters/claude/${rel}`;
+  if (/\.(ts|tsx)$/.test(rel)) {
+    const content = readFileSync(join(root, source), "utf8").replaceAll("'../../../nova-bot/", "'../nova-bot/");
+    writeFile(join(pluginDir, rel), withGeneratedComment(source, content));
+  } else writeFile(join(pluginDir, rel), readFileSync(join(root, source)));
 }
 
 writeJson(marketplaceFile, {
