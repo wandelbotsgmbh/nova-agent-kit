@@ -9,11 +9,11 @@ Code CLI, `pnpm validate:skill` needs [uv](https://docs.astral.sh/uv/).
 
 ```sh
 pnpm install
-pnpm build    # regenerate plugin/, .agents/ and .claude-plugin/ from skill/ and nova-bot/
+pnpm build    # regenerate plugin/, .agents/ and .claude-plugin/
 pnpm check    # build, generated-output diff, tests, markdownlint, plugin and skill validators
 ```
 
-Edit only `skill/` and `nova-bot/`; everything under `plugin/`, `.agents/` and
+Edit adapter content in `skill/`, `nova-bot/` and `adapters/`; everything under `plugin/`, `.agents/` and
 `.claude-plugin/` is generated. Commit the generated output together with the source - CI
 regenerates it and fails on any difference. [AGENTS.md](AGENTS.md) has the full working
 rules: what to edit, what the tests check, and the content rules for the skill (only

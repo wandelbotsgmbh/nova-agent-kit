@@ -6,17 +6,16 @@ and update the date.
 
 | Harness | Adapter | Skill frontmatter | `reference/` files | Session-start hook | MCP (`nova mcp`) | Status | Last verified |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Claude Code | `plugin/` via `.claude-plugin/marketplace.json` | `name`, `description`, `license` | read on demand | yes (`hooks/hooks.json`) | yes (`.mcp.json`) | supported | 2026-10-31 |
+| Claude Code | `plugin/claude/` via `.claude-plugin/marketplace.json` | `name`, `description`, `license` | read on demand | yes (`hooks/hooks.json`) | yes (`.mcp.json`) | supported | 2026-10-31 |
 | Agents reading `.agents/skills/` ([Agent Skills spec](https://agentskills.io)) | `.agents/skills/nova/` | `name`, `description`, `license` | read on demand | no - degraded mode | no - configure `nova mcp` in the agent if wanted | supported | 2026-10-31 |
-| [OpenCode](https://opencode.ai/docs/skills/) | `.agents/skills/nova/` (read directly; also `.opencode/skills/`) | `name` (must match directory), `description`, `license` | read on demand | no - degraded mode (plugins offer `session.created`) | yes, via `opencode.json` (see README) | documented, not yet verified | - |
+| [OpenCode V2](https://opencode.ai/docs/skills/) | `plugin/opencode/` (plugin + skill), or `.agents/skills/nova/` (skill only) | `name`, `description`, `license` | read on demand | no - degraded mode | configure separately | plugin smoke-tested on 2.3.0; full workflow not yet verified | 2026-11-27 |
 | [pi](https://pi.dev) | `.agents/skills/nova/` (read directly; also `.pi/skills/`) | `name`, `description`, `license` | read on demand | no - degraded mode (extensions offer `session_start`) | yes, via `.pi/mcp.json` or `pi mcp add` (see README) | documented, not yet verified | - |
 | Cursor | `cursor-plugin/` | - | - | - | - | planned | - |
 | Codex | - | - | - | - | - | planned | - |
 
 "Documented" means the harness documentation states the behaviour; move it to "supported" with a
 date after running the verification steps below. A pi package (`package.json` with a `pi.skills`
-entry) and an OpenCode plugin for the session-start check are possible follow-ups if the plain
-skill tree turns out not to be enough.
+entry) and an OpenCode session-start check are possible follow-ups.
 
 Subagent definitions (`skill/agents/`) are not part of the kit yet; the column will be added
 when they are.

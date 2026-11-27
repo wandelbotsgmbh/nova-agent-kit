@@ -1,0 +1,8 @@
+{
+  "name": "nova-agent-kit-opencode",
+  "type": "module",
+  "license": "Apache-2.0",
+  "exports": {
+    ".": "./index.ts"
+  }
+}

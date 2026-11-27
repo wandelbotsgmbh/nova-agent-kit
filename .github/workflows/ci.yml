@@ -51,12 +51,13 @@ jobs:
         run: npm install -g @anthropic-ai/claude-code@latest
       # --strict, except for the missing `version` (see scripts/validate-plugin.mjs)
       - name: claude plugin validate
-        run: node scripts/validate-plugin.mjs plugin .
+        run: node scripts/validate-plugin.mjs plugin/claude .
       # setup-uv publishes no moving major tag; Dependabot bumps the exact version.
       - uses: astral-sh/setup-uv@v10.3.3
       - name: Agent Skills spec
         run: |
-          uvx --from skills-ref agentskills validate plugin/skills/nova
+          uvx --from skills-ref agentskills validate plugin/claude/skills/nova
+          uvx --from skills-ref agentskills validate plugin/opencode/skills/nova
           uvx --from skills-ref agentskills validate .agents/skills/nova
 
   test:

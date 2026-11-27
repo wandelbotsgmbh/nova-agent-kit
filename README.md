@@ -7,9 +7,10 @@ robots. Adapters for each agent are generated from that skill.
 
 | Agent | Adapter | Status |
 | --- | --- | --- |
-| Claude Code | `plugin/` (plugin + marketplace) | supported |
+| Claude Code | `plugin/claude/` (via marketplace) | supported |
 | Any agent that reads `.agents/skills/` | `.agents/skills/nova/` | supported |
-| OpenCode, pi | `.agents/skills/nova/` (read directly) | documented, see [HARNESSES.md](HARNESSES.md) |
+| OpenCode V2 | `plugin/opencode/` or `.agents/skills/nova/` | see [HARNESSES.md](HARNESSES.md) |
+| pi | `.agents/skills/nova/` (read directly) | documented, see [HARNESSES.md](HARNESSES.md) |
 | Cursor, Codex | - | planned, see [HARNESSES.md](HARNESSES.md) |
 
 ## Prerequisites
@@ -80,6 +81,22 @@ The plugin adds:
   remembered too. It is built on Claude Code's
   hooks-module API, which is in early access and may change between Claude Code releases.
 
+### OpenCode V2
+
+Install the NOVA plugin from the stable `release` branch with OpenCode's plugin manager:
+
+```sh
+opencode plugin add 'github:wandelbotsgmbh/nova-agent-kit#release::path:plugin/opencode'
+```
+
+Use `#main` instead to follow the preview channel. The repository is private; your Git
+credentials need access. The plugin registers the NOVA skill and its references without a
+manual copy. Mention `@nova` in a prompt to load the skill explicitly. The `nova` CLI
+remains a prerequisite, and MCP is configured separately.
+
+For local development, use the absolute path to the generated `plugin/opencode/` directory
+in the `plugins` array of `opencode.json(c)`.
+
 ### Agents that read `.agents/skills/`
 
 Copy `.agents/skills/nova/` into your project's `.agents/skills/` directory (or wherever your
@@ -110,11 +127,13 @@ instance.
 ## Repository layout
 
 ```text
-skill/                    the skill: SKILL.md + reference/*.md - the only hand-edited content
+skill/                    the shared skill: SKILL.md + reference/*.md
 nova-bot/                 the NOVA bot: hooks module, state types and icon - hand-edited
-scripts/build.mjs         generates the adapters below from skill/ and nova-bot/
-plugin/                   generated Claude Code plugin, including the NOVA bot
-.claude-plugin/           generated marketplace manifest pointing at ./plugin
+adapters/opencode/        OpenCode server and terminal plugin sources
+scripts/build.mjs         generates the adapters below from the sources above
+plugin/claude/            generated Claude Code plugin, including the NOVA bot
+plugin/opencode/          generated OpenCode V2 plugin
+.claude-plugin/           generated marketplace manifest pointing at ./plugin/claude
 .agents/skills/nova/      generated plain skill tree
 test/                     node:test suite
 evals/                    eval cases for `claude plugin eval` (not run in CI)

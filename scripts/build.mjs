@@ -1,6 +1,6 @@
-// Generates the agent adapters from skill/, and adds the NOVA bot from nova-bot/ to the
-// Claude Code plugin. Output is deterministic; run `pnpm build` after every change under
-// skill/ or nova-bot/ and commit the result. An optional argument writes the
+// Generates the agent adapters from skill/, nova-bot/ and adapters/.
+// Output is deterministic; run `pnpm build` after changing those sources
+// and commit the result. An optional argument writes the
 // output below another directory instead of the repository root (used by the tests).
 import {
   chmodSync,
@@ -18,7 +18,8 @@ const outRoot = process.argv[2] ? resolve(process.argv[2]) : root;
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 
 const skillDir = join(root, "skill");
-const pluginDir = join(outRoot, "plugin");
+const pluginDir = join(outRoot, "plugin", "claude");
+const opencodeDir = join(outRoot, "plugin", "opencode");
 const agentsSkillDir = join(outRoot, ".agents", "skills", "nova");
 const marketplaceFile = join(outRoot, ".claude-plugin", "marketplace.json");
 const botSourceDir = join(root, "nova-bot");
@@ -90,12 +91,25 @@ exit 0
 `;
 
 rmSync(pluginDir, { recursive: true, force: true });
+rmSync(opencodeDir, { recursive: true, force: true });
 rmSync(agentsSkillDir, { recursive: true, force: true });
 rmSync(marketplaceFile, { force: true });
 
 copySkill(join(pluginDir, "skills", "nova"));
+copySkill(join(opencodeDir, "skills", "nova"));
 copySkill(agentsSkillDir);
 
+writeJson(join(opencodeDir, "package.json"), {
+  name: "nova-agent-kit-opencode",
+  type: "module",
+  license: pkg.license,
+  exports: { ".": "./index.ts" },
+});
+for (const rel of listFiles(join(root, "adapters", "opencode"))) {
+  if (rel === "tui.tsx" || rel === "mood.ts") continue;
+  const source = `adapters/opencode/${rel}`;
+  writeFile(join(opencodeDir, rel), `// Generated from ${source} by scripts/build.mjs. Edit the source, then run \`pnpm build\`.\n${readFileSync(join(root, source), "utf8")}`);
+}
 writeJson(join(pluginDir, ".claude-plugin", "plugin.json"), {
   name: pluginName,
   // No version: Claude Code then versions the plugin by commit SHA, so every
@@ -149,12 +163,12 @@ writeJson(marketplaceFile, {
   plugins: [
     {
       name: pluginName,
-      source: "./plugin",
+      source: "./plugin/claude",
       description,
     },
   ],
 });
 
 console.log(
-  `Generated plugin/ (with the NOVA bot), .agents/skills/nova/ and .claude-plugin/marketplace.json in ${outRoot}`,
+  `Generated plugin/claude/, plugin/opencode/, .agents/skills/nova/ and .claude-plugin/marketplace.json in ${outRoot}`,
 );

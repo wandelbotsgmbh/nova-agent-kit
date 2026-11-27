@@ -1,4 +1,4 @@
-// Runs the cases in evals/ against plugin/ with `claude plugin eval`.
+// Runs the cases in evals/ against plugin/claude/ with `claude plugin eval`.
 // The eval dir has to sit inside the plugin, and evals/ must not ship with it, so this
 // copies both into a temporary directory, runs there and moves the results to
 // evals/results/ (gitignored). Extra arguments go to `claude plugin eval`, e.g.
@@ -14,7 +14,7 @@ const work = mkdtempSync(join(tmpdir(), "nova-eval-"));
 const plugin = join(work, "plugin");
 let status = 1;
 try {
-  cpSync(join(root, "plugin"), plugin, { recursive: true });
+  cpSync(join(root, "plugin", "claude"), plugin, { recursive: true });
   cpSync(join(root, "evals"), join(plugin, "evals"), {
     recursive: true,
     filter: (src) => !src.startsWith(join(root, "evals", "results")),

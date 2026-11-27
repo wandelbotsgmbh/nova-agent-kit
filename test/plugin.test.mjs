@@ -5,10 +5,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 
-import { botSourceDir, isDirectory, pluginDir, readJson, root, walk } from "./helpers.mjs";
+import { botSourceDir, isDirectory, pluginDir, readJson, readText, root, walk } from "./helpers.mjs";
 
 const pkg = readJson(join(root, "package.json"));
 const plugin = readJson(join(pluginDir, ".claude-plugin", "plugin.json"));
+const opencodeDir = join(root, "plugin", "opencode");
+const opencode = readJson(join(opencodeDir, "package.json"));
 const marketplace = readJson(join(root, ".claude-plugin", "marketplace.json"));
 const mcp = readJson(join(pluginDir, ".mcp.json"));
 const hooks = readJson(join(pluginDir, "hooks", "hooks.json"));
@@ -29,7 +31,24 @@ function assertAllowedName(name, what) {
 test("no manifest pins a version", () => {
   assert.equal(pkg.version, undefined, "package.json must not carry a version (tags do)");
   assert.equal(plugin.version, undefined, "plugin.json must not pin a version");
+  assert.equal(opencode.version, undefined, "OpenCode package must not pin a version");
   assert.equal(marketplace.plugins[0].version, undefined, "the marketplace entry must not pin a version");
+});
+
+test("OpenCode package exposes its NOVA skill plugin", () => {
+  assert.equal(opencode.name, "nova-agent-kit-opencode");
+  assert.equal(opencode.type, "module");
+  assert.equal(opencode.license, pkg.license);
+  assert.equal(opencode.exports["."], "./index.ts");
+
+  const entrypointPath = join(opencodeDir, opencode.exports["."]);
+  assert.ok(existsSync(entrypointPath), "OpenCode package entrypoint must exist");
+  const entrypoint = readText(entrypointPath);
+  assert.match(entrypoint, /Plugin\.define\(\{/);
+  assert.match(entrypoint, /ctx\.skill\.transform/);
+  assert.match(entrypoint, /editor\.get\("nova"\)/, "do not replace an existing NOVA skill");
+  assert.match(entrypoint, /Skill\.ID\.make\("nova"\)/);
+  assert.match(entrypoint, /content: content\.trim\(\)/);
 });
 
 test("plugin.json has the required fields", () => {
@@ -47,13 +66,13 @@ test("plugin userConfig holds at most the host", () => {
   }
 });
 
-test("marketplace.json points at ./plugin with matching metadata", () => {
+test("marketplace.json points at ./plugin/claude with matching metadata", () => {
   assertAllowedName(marketplace.name, "marketplace name");
   assert.ok(marketplace.owner?.name);
   assert.equal(marketplace.plugins.length, 1);
   const [entry] = marketplace.plugins;
   assert.equal(entry.name, plugin.name);
-  assert.equal(entry.source, "./plugin");
+  assert.equal(entry.source, "./plugin/claude");
 });
 
 test(".mcp.json launches nova mcp without credentials", () => {
@@ -101,9 +120,11 @@ test("SessionStart hook reports a missing nova CLI and stays quiet otherwise", (
 });
 
 test("plugin has no bin/ directory and no CLAUDE.md", () => {
-  assert.ok(!isDirectory(join(pluginDir, "bin")), "plugin/bin is not allowed");
-  for (const rel of walk(pluginDir)) {
-    assert.doesNotMatch(rel, /(^|\/)bin\//, `${rel} is inside a bin/ directory`);
+  assert.ok(!isDirectory(join(pluginDir, "bin")), "plugin/claude/bin is not allowed");
+  for (const dir of [pluginDir, opencodeDir]) {
+    for (const rel of walk(dir)) {
+      assert.doesNotMatch(rel, /(^|\/)bin\//, `${dir}/${rel} is inside a bin/ directory`);
+    }
   }
   assert.ok(!existsSync(join(pluginDir, "CLAUDE.md")));
 });
@@ -121,4 +142,3 @@ test("plugin contains exactly the generated skill, the NOVA bot and manifests", 
   ].sort();
   assert.deepEqual(files, expected);
 });
-

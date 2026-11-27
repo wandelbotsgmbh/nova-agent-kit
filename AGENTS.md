@@ -8,9 +8,10 @@
 - `nova-bot/` is the source of the NOVA bot, the robot the plugin shows above the prompt:
   `hooks/*.ts(x)` (a Claude Code hooks module), `types/index.d.ts` (its state contract,
   declared under the plugin name `nova`) and `assets/icon.png`. The build copies it into
-  `plugin/` and names the module in `hooks/hooks.json`; generated code files carry a comment
+  `plugin/claude/` and names the module in `hooks/hooks.json`; generated code files carry a comment
   line saying so. The hooks-module API is early access: check the bot after Claude Code
   updates. It is decoration only - keep everything the kit needs working out of it.
+- `adapters/opencode/` contains the OpenCode V2 plugin entrypoint.
 - `scripts/build.mjs` is the only place that knows the adapter layouts (plugin manifest,
   hooks, `.mcp.json`, marketplace manifest).
 - Versions live in git tags only, cut by semantic-release (`.releaserc.json`,
@@ -25,7 +26,7 @@
 
 ```sh
 pnpm install                 # once; Node 22 or newer, pnpm (npm works too)
-pnpm build                   # skill/ + nova-bot/ -> plugin/; skill/ -> .agents/skills/nova/; marketplace.json
+pnpm build                   # generate the Claude, OpenCode and plain skill adapters
 pnpm test                    # node:test suite, see below
 pnpm lint:md                 # markdownlint-cli2
 pnpm validate:plugin         # claude plugin validate, strict except the missing version (needs the Claude Code CLI)
@@ -33,7 +34,7 @@ pnpm validate:skill          # Agent Skills spec validator (needs uv)
 pnpm check                   # all of the above, in CI order
 ```
 
-Run `pnpm build` after every change under `skill/` or `nova-bot/` and commit the generated output together
+Run `pnpm build` after every change under `skill/`, `nova-bot/` or `adapters/` and commit the generated output together
 with the source. CI regenerates and fails on any difference. We chose this over a bot that
 commits generated files: no bot commits on PRs, and the generated diff is visible in review;
 the cost is remembering to run the build, which the failing check reminds you of.
@@ -42,7 +43,7 @@ the cost is remembering to run the build, which the failing check reminds you of
 
 | File | Checks |
 | --- | --- |
-| `test/generated.test.mjs` | generated output matches `skill/` and `nova-bot/` |
+| `test/generated.test.mjs` | generated output matches the shared sources and adapter sources |
 | `test/skill.test.mjs` | frontmatter, `name` equals the skill directory, description length, line count, reference links resolve, references one level deep, agent-neutral wording, no unreleased commands |
 | `test/plugin.test.mjs` | manifest shapes, no pinned version, no reserved name prefixes, `userConfig` holds at most `host`, hook script behaviour, the NOVA bot module, no `bin/` |
 | `test/secrets.test.mjs` | no token-like strings, private keys or instance hostnames anywhere |
@@ -70,5 +71,5 @@ the cost is remembering to run the build, which the failing check reminds you of
 - `evals/` holds cases for `claude plugin eval`; they call a model, so they are not part of
   CI. Run them locally with `pnpm eval` (extra arguments go to `claude plugin eval`, e.g.
   `--case 'motion-*' --runs 1`). `claude plugin eval` only reads an eval dir inside the
-  plugin, so `scripts/eval.mjs` runs on a temporary copy of `plugin/` with `evals/` inside.
+  plugin, so `scripts/eval.mjs` runs on a temporary copy of `plugin/claude/` with `evals/` inside.
   A safety case only counts if the run without the plugin fails it: check the delta.
