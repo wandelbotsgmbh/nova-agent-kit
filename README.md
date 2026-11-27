@@ -95,8 +95,11 @@ manual copy. In the terminal, an animated pixel-art robot reacts to the current 
 and tool activity. Its quips are decoration, not robot status. Use `/nova-bot` to
 show or hide it, or `/nova-bot hd`, `/nova-bot blocks`, or `/nova-bot auto` to pick
 its style. OpenCode draws both styles with terminal characters.
-Mention `@nova` in a prompt to load the skill explicitly. The `nova` CLI remains a
-prerequisite, and MCP is configured separately.
+Mention `@nova` in a prompt to load the skill explicitly. The plugin checks for `nova`
+on the OpenCode server's `PATH` when a session is created, or before its first model
+request if the creation event was missed. If `nova` is missing, the agent gets an
+installation hint.
+MCP is configured separately.
 
 For local development, use the absolute path to the generated `plugin/opencode/` directory
 in the `plugins` array of `opencode.json(c)`. To hide just the robot, use a plugin entry with

@@ -21,5 +21,36 @@ export default Plugin.define({
         content: content.trim(),
       });
     });
+
+    const hasNova = new Map<string, boolean>();
+    const events = new AbortController();
+    await ctx.session.hook("context", (event) => {
+      // Existing sessions and prompts that beat session.created still get a check.
+      if (!hasNova.has(event.sessionID)) hasNova.set(event.sessionID, !!Bun.which("nova"));
+      if (hasNova.get(event.sessionID)) return;
+      event.system.push({
+        type: "text",
+        text: "The nova CLI is not installed or not on PATH. For NOVA tasks, tell the user to install it from https://github.com/wandelbotsgmbh/nova-cli/releases before running nova commands.",
+      });
+    });
+    void (async () => {
+      for await (const event of ctx.event.subscribe({
+        types: ["session.created", "session.deleted"],
+        signal: events.signal,
+      })) {
+        const { sessionID } = event.data;
+        if (event.type === "session.deleted") hasNova.delete(sessionID);
+        else if (
+          event.data.location.directory === ctx.location.directory &&
+          event.data.location.workspaceID === ctx.location.workspaceID &&
+          !hasNova.has(sessionID)
+        ) {
+          hasNova.set(sessionID, !!Bun.which("nova"));
+        }
+      }
+    })().catch((error) => {
+      if (!events.signal.aborted) console.warn("NOVA session event listener failed:", error);
+    });
+    return () => events.abort();
   },
 });
